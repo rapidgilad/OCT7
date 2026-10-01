@@ -1,0 +1,4 @@
+// Map files in game/data/maps, loaded in this order. The first is the default skirmish map.
+{
+  "maps": ["ridge_outpost"]
+}

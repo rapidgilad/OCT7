@@ -4,7 +4,7 @@ using OCT7.Sim.Data;
 
 namespace OCT7.Tools
 {
-    /// <summary>Loads game/data/*.json from the repository for tests and tools (outside Godot).</summary>
+    /// <summary>Loads game/data from the repository for tests and tools (outside Godot).</summary>
     public static class RepoData
     {
         public static string FindRepoRoot(string startDirectory = null)
@@ -29,10 +29,30 @@ namespace OCT7.Tools
         public static GameDataSet Load(string dataDirectory = null)
         {
             var dir = dataDirectory ?? DataDirectory();
-            return GameDataLoader.FromJson(
-                File.ReadAllText(Path.Combine(dir, "economy.json")),
-                File.ReadAllText(Path.Combine(dir, "factions.json")),
-                File.ReadAllText(Path.Combine(dir, "units.json")));
+            string Read(string file) => File.ReadAllText(Path.Combine(dir, file));
+            string ReadOptional(string file) => File.Exists(Path.Combine(dir, file)) ? Read(file) : null;
+
+            var files = new GameDataFiles
+            {
+                Economy = Read("economy.json"),
+                Factions = Read("factions.json"),
+                Units = Read("units.json"),
+                Weapons = ReadOptional("weapons.json"),
+                Structures = ReadOptional("structures.json"),
+                Rules = ReadOptional("rules.json"),
+                Ai = ReadOptional("ai.json"),
+            };
+
+            var mapIndexPath = Path.Combine(dir, "maps", "maps.json");
+            if (File.Exists(mapIndexPath))
+            {
+                foreach (var id in GameDataLoader.ParseMapIndex(File.ReadAllText(mapIndexPath)).Maps)
+                {
+                    files.Maps.Add(File.ReadAllText(Path.Combine(dir, "maps", id + ".json")));
+                }
+            }
+
+            return GameDataLoader.FromJson(files);
         }
     }
 }

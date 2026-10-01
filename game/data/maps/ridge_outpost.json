@@ -1,0 +1,63 @@
+// Border Ridge Outpost (solo V1 map 1, docs/05-maps.md). 300 x 300 m, 2 m cells.
+// mirror: every element without "center": true is duplicated by 180° rotation (cell x -> 149 - x), so both sides are identical.
+// Obstacles are in cells (inclusive). Sectors and starts are in world meters.
+{
+  "id": "ridge_outpost",
+  "name": "Border Ridge Outpost",
+  "width": 150,
+  "height": 150,
+  "cellSize": 2,
+  "mirror": true,
+  "starts": [{ "x": 30, "y": 30 }],
+
+  "sectors": [
+    { "id": "hq",        "type": "hq",        "x": 30,  "y": 30,  "owner": 0 },
+    { "id": "vp_center", "type": "victory",   "x": 150, "y": 150, "center": true },
+    { "id": "vp_flank",  "type": "victory",   "x": 74,  "y": 226 },
+    { "id": "fuel",      "type": "fuel",      "x": 60,  "y": 140 },
+    { "id": "munitions", "type": "munitions", "x": 140, "y": 60 },
+    { "id": "s_west",    "type": "standard",  "x": 36,  "y": 96 },
+    { "id": "s_south",   "type": "standard",  "x": 96,  "y": 36 },
+    { "id": "s_mid",     "type": "standard",  "x": 104, "y": 104 },
+    { "id": "s_ridge_w", "type": "standard",  "x": 50,  "y": 190 },
+    { "id": "s_ridge_s", "type": "standard",  "x": 190, "y": 50 }
+  ],
+
+  "obstacles": [
+    { "minX": 62, "minY": 64, "maxX": 68, "maxY": 70, "height": 8,   "kind": "building" },
+    { "minX": 71, "minY": 58, "maxX": 77, "maxY": 62, "height": 6,   "kind": "building" },
+    { "minX": 63, "minY": 73, "maxX": 63, "maxY": 79, "height": 1.2, "kind": "wall" },
+    { "minX": 70, "minY": 66, "maxX": 74, "maxY": 66, "height": 1.0, "kind": "fence" },
+
+    { "minX": 26, "minY": 104, "maxX": 32, "maxY": 109, "height": 9,   "kind": "building" },
+    { "minX": 42, "minY": 116, "maxX": 47, "maxY": 122, "height": 7,   "kind": "building" },
+    { "minX": 30, "minY": 118, "maxX": 36, "maxY": 118, "height": 1.2, "kind": "wall" },
+    { "minX": 44, "minY": 102, "maxX": 48, "maxY": 106, "height": 3,   "kind": "rock" },
+
+    { "minX": 21, "minY": 64, "maxX": 26, "maxY": 69, "height": 6,   "kind": "building" },
+    { "minX": 34, "minY": 66, "maxX": 34, "maxY": 74, "height": 1.2, "kind": "wall" },
+    { "minX": 26, "minY": 76, "maxX": 32, "maxY": 76, "height": 1.0, "kind": "fence" },
+
+    { "minX": 63, "minY": 22, "maxX": 68, "maxY": 27, "height": 6,   "kind": "building" },
+    { "minX": 72, "minY": 36, "maxX": 80, "maxY": 36, "height": 1.2, "kind": "wall" },
+    { "minX": 75, "minY": 24, "maxX": 75, "maxY": 30, "height": 1.0, "kind": "fence" },
+
+    { "minX": 12, "minY": 52, "maxX": 16, "maxY": 58, "height": 7,  "kind": "building" },
+    { "minX": 52, "minY": 10, "maxX": 58, "maxY": 14, "height": 7,  "kind": "building" },
+    { "minX": 46, "minY": 44, "maxX": 51, "maxY": 49, "height": 10, "kind": "building" },
+    { "minX": 56, "minY": 56, "maxX": 59, "maxY": 59, "height": 3,  "kind": "rock" },
+    { "minX": 16, "minY": 88, "maxX": 21, "maxY": 92, "height": 8,  "kind": "building" },
+    { "minX": 88, "minY": 16, "maxX": 92, "maxY": 21, "height": 8,  "kind": "building" },
+
+    { "minX": 86, "minY": 36, "maxX": 92, "maxY": 40, "height": 4, "kind": "rock" },
+    { "minX": 36, "minY": 86, "maxX": 40, "maxY": 92, "height": 4, "kind": "rock" },
+
+    { "minX": 22, "minY": 34, "maxX": 30, "maxY": 34, "height": 1.0, "kind": "fence" }
+  ],
+
+  "groundZones": [
+    { "minX": 30, "minY": 80, "maxX": 50, "maxY": 100, "type": "rock" },
+    { "minX": 80, "minY": 30, "maxX": 100, "maxY": 50, "type": "rock" },
+    { "minX": 8,  "minY": 58, "maxX": 24, "maxY": 84, "type": "farmland" }
+  ]
+}

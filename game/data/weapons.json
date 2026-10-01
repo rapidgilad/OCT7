@@ -1,0 +1,28 @@
+// Weapons — docs/02-core-gameplay.md §3. Initial tuning; balance comes later via MatchRunner + playtests.
+// range m · accuracy by range band (near ≤ 1/3, mid ≤ 2/3, far) · damage per hit · cooldown s between volleys
+// penetration vs vehicle armor · suppression per hit (misses add half) · setupTime s standing still before firing
+{
+  "weapons": [
+    { "id": "carbine",       "name": "Carbine",              "kind": "smallArms",  "range": 30, "accuracyNear": 0.45, "accuracyMid": 0.32, "accuracyFar": 0.20, "damage": 10, "cooldown": 1.8, "suppression": 0.012 },
+    { "id": "tavor",         "name": "Tavor X95",            "kind": "smallArms",  "range": 35, "accuracyNear": 0.55, "accuracyMid": 0.42, "accuracyFar": 0.28, "damage": 12, "cooldown": 1.6, "suppression": 0.015 },
+    { "id": "ak47",          "name": "AK-47",                "kind": "smallArms",  "range": 35, "accuracyNear": 0.50, "accuracyMid": 0.38, "accuracyFar": 0.25, "damage": 12, "cooldown": 1.6, "suppression": 0.015 },
+    { "id": "ak47_elite",    "name": "AK (elite)",           "kind": "smallArms",  "range": 35, "accuracyNear": 0.58, "accuracyMid": 0.45, "accuracyFar": 0.32, "damage": 13, "cooldown": 1.5, "suppression": 0.018 },
+
+    { "id": "mag",           "name": "FN MAG",               "kind": "machineGun", "range": 40, "accuracyNear": 0.45, "accuracyMid": 0.35, "accuracyFar": 0.25, "damage": 8,  "cooldown": 0.35, "penetration": 3, "suppression": 0.06, "setupTime": 2.5, "movingAccuracy": 0.0 },
+    { "id": "pkm",           "name": "PKM",                  "kind": "machineGun", "range": 40, "accuracyNear": 0.43, "accuracyMid": 0.33, "accuracyFar": 0.23, "damage": 8,  "cooldown": 0.35, "penetration": 3, "suppression": 0.06, "setupTime": 2.5, "movingAccuracy": 0.0 },
+
+    { "id": "barrett",       "name": "Sniper rifle",         "kind": "sniper",     "range": 50, "accuracyNear": 0.90, "accuracyMid": 0.85, "accuracyFar": 0.80, "damage": 110, "cooldown": 5.0, "penetration": 15, "suppression": 0.10, "movingAccuracy": 0.2 },
+    { "id": "ghoul",         "name": "Al-Ghoul 14.5mm",      "kind": "sniper",     "range": 50, "accuracyNear": 0.85, "accuracyMid": 0.80, "accuracyFar": 0.72, "damage": 110, "cooldown": 5.5, "penetration": 25, "suppression": 0.10, "movingAccuracy": 0.2 },
+    { "id": "hs50",          "name": "Steyr HS .50",         "kind": "sniper",     "range": 50, "accuracyNear": 0.88, "accuracyMid": 0.82, "accuracyFar": 0.75, "damage": 110, "cooldown": 5.5, "penetration": 20, "suppression": 0.10, "movingAccuracy": 0.2 },
+
+    { "id": "spike_mr",      "name": "Spike MR",             "kind": "antiTank",   "range": 50, "accuracyNear": 0.80, "accuracyMid": 0.75, "accuracyFar": 0.70, "damage": 280, "cooldown": 9.0, "penetration": 330, "suppression": 0.15, "setupTime": 3.0, "movingAccuracy": 0.0, "vsInfantryAccuracy": 0.3, "vsInfantryDamage": 60, "vsStructure": 1.0 },
+    { "id": "kornet",        "name": "Kornet",               "kind": "antiTank",   "range": 55, "accuracyNear": 0.80, "accuracyMid": 0.75, "accuracyFar": 0.70, "damage": 280, "cooldown": 9.0, "penetration": 340, "suppression": 0.15, "setupTime": 3.0, "movingAccuracy": 0.0, "vsInfantryAccuracy": 0.3, "vsInfantryDamage": 60, "vsStructure": 1.0 },
+    { "id": "yassin105",     "name": "Yassin-105 RPG",       "kind": "antiTank",   "range": 30, "accuracyNear": 0.60, "accuracyMid": 0.45, "accuracyFar": 0.32, "damage": 200, "cooldown": 7.0, "penetration": 240, "suppression": 0.20, "movingAccuracy": 0.4, "vsInfantryAccuracy": 0.4, "vsInfantryDamage": 60, "vsStructure": 1.0 },
+    { "id": "rpg29",         "name": "RPG-29",               "kind": "antiTank",   "range": 30, "accuracyNear": 0.62, "accuracyMid": 0.47, "accuracyFar": 0.34, "damage": 210, "cooldown": 7.0, "penetration": 260, "suppression": 0.20, "movingAccuracy": 0.4, "vsInfantryAccuracy": 0.4, "vsInfantryDamage": 60, "vsStructure": 1.0 },
+
+    { "id": "merkava_120",   "name": "120mm gun",            "kind": "tankGun",    "range": 45, "accuracyNear": 0.70, "accuracyMid": 0.60, "accuracyFar": 0.50, "damage": 260, "cooldown": 5.0, "penetration": 360, "suppression": 0.30, "movingAccuracy": 0.6, "vsInfantryAccuracy": 0.8, "vsInfantryDamage": 85, "modelsHitVsInfantry": 2, "vsStructure": 1.0 },
+    { "id": "merkava_coax",  "name": "Coaxial MAG",          "kind": "machineGun", "range": 40, "accuracyNear": 0.40, "accuracyMid": 0.30, "accuracyFar": 0.20, "damage": 8,  "cooldown": 0.35, "penetration": 3, "suppression": 0.05, "movingAccuracy": 0.7 },
+    { "id": "namer_rws",     "name": ".50 cal RWS",          "kind": "autocannon", "range": 40, "accuracyNear": 0.55, "accuracyMid": 0.45, "accuracyFar": 0.35, "damage": 14, "cooldown": 0.45, "penetration": 22, "suppression": 0.06, "movingAccuracy": 0.8, "vsStructure": 0.3 },
+    { "id": "zu23",          "name": "ZU-23-2",              "kind": "autocannon", "range": 42, "accuracyNear": 0.50, "accuracyMid": 0.40, "accuracyFar": 0.30, "damage": 18, "cooldown": 0.40, "penetration": 30, "suppression": 0.08, "movingAccuracy": 0.5, "vsStructure": 0.3 }
+  ]
+}

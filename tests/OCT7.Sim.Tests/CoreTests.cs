@@ -186,7 +186,7 @@ namespace OCT7.Sim.Tests
         public static Simulation OpenMap(int size = 64, ulong seed = 42)
         {
             var grid = new MapGrid(size, size, 2f);
-            var map = new MapDefinition("Open", grid, new List<MapObstacle>(), new[] { new Vec2(8f, 8f), new Vec2(size * 2f - 8f, size * 2f - 8f) });
+            var map = new MapDefinition("open", "Open", grid, new List<MapObstacle>(), new[] { new Vec2(8f, 8f), new Vec2(size * 2f - 8f, size * 2f - 8f) });
             var sim = new Simulation(Data, map, seed);
             sim.AddPlayer("idf", map.HqPositions[0]);
             sim.AddPlayer("hamas", map.HqPositions[1]);

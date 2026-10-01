@@ -1,0 +1,22 @@
+// Structures — docs/factions/*.md tech trees (solo V1: HQ + 3 tiers; T4 content folded into T3).
+// footprint = square size in cells (2 m). Sandbags: footprint = width, length = cells along the placement axis.
+{
+  "structures": [
+    { "id": "idf_hq",   "factionId": "idf", "name": "Brigade Forward HQ",     "kind": "hq",         "tier": 0, "health": 3500, "footprint": 6, "height": 6,   "sightRange": 40, "produces": ["idf_engineers"] },
+    { "id": "idf_t1",   "factionId": "idf", "name": "Infantry Company Post",  "kind": "production", "tier": 1, "manpower": 180, "fuel": 15,  "buildTime": 35, "health": 1500, "footprint": 5, "height": 4.5, "produces": ["idf_golani", "idf_mag_team", "idf_sniper"], "requires": ["idf_hq"] },
+    { "id": "idf_t2",   "factionId": "idf", "name": "Combat Support Base",    "kind": "production", "tier": 2, "manpower": 200, "fuel": 60,  "buildTime": 45, "health": 1800, "footprint": 5, "height": 5,   "produces": ["idf_spike_team", "idf_namer"], "requires": ["idf_t1"] },
+    { "id": "idf_t3",   "factionId": "idf", "name": "Armored Battalion Yard", "kind": "production", "tier": 3, "manpower": 300, "fuel": 120, "buildTime": 60, "health": 2200, "footprint": 6, "height": 6,   "produces": ["idf_merkava"], "requires": ["idf_t2"] },
+
+    { "id": "hamas_hq", "factionId": "hamas", "name": "Command Bunker",       "kind": "hq",         "tier": 0, "health": 3500, "footprint": 6, "height": 3,   "sightRange": 40, "produces": ["hamas_diggers", "hamas_fighters"] },
+    { "id": "hamas_t1", "factionId": "hamas", "name": "Workshop",             "kind": "production", "tier": 1, "manpower": 150, "fuel": 10,  "buildTime": 30, "health": 1300, "footprint": 5, "height": 4,   "produces": ["hamas_rpg_team", "hamas_pkm_team", "hamas_ghoul_sniper"], "requires": ["hamas_hq"] },
+    { "id": "hamas_t2", "factionId": "hamas", "name": "Arms Lab",             "kind": "production", "tier": 2, "manpower": 200, "fuel": 40,  "buildTime": 40, "health": 1500, "footprint": 5, "height": 4,   "produces": ["hamas_kornet_team"], "requires": ["hamas_t1"] },
+    { "id": "hamas_t3", "factionId": "hamas", "name": "Elite Command",        "kind": "production", "tier": 3, "manpower": 250, "fuel": 80,  "buildTime": 50, "health": 1800, "footprint": 5, "height": 3.5, "produces": ["hamas_elite"], "requires": ["hamas_t2"] },
+
+    { "id": "hzb_hq",   "factionId": "hezbollah", "name": "Command Post",          "kind": "hq",         "tier": 0, "health": 3500, "footprint": 6, "height": 4.5, "sightRange": 40, "produces": ["hzb_engineers", "hzb_fighters"] },
+    { "id": "hzb_t1",   "factionId": "hezbollah", "name": "Training Camp",         "kind": "production", "tier": 1, "manpower": 180, "fuel": 15,  "buildTime": 35, "health": 1400, "footprint": 5, "height": 4,   "produces": ["hzb_pkm_team", "hzb_rpg29_team", "hzb_hs50_sniper"], "requires": ["hzb_hq"] },
+    { "id": "hzb_t2",   "factionId": "hezbollah", "name": "Fortification Command", "kind": "production", "tier": 2, "manpower": 220, "fuel": 50,  "buildTime": 45, "health": 1800, "footprint": 5, "height": 4,   "produces": ["hzb_kornet_team", "hzb_zu23_technical"], "requires": ["hzb_t1"] },
+    { "id": "hzb_t3",   "factionId": "hezbollah", "name": "Strategic Unit HQ",     "kind": "production", "tier": 3, "manpower": 300, "fuel": 100, "buildTime": 55, "health": 2000, "footprint": 6, "height": 5,   "produces": ["hzb_radwan"], "requires": ["hzb_t2"] },
+
+    { "id": "sandbags", "factionId": "any", "name": "Sandbags", "kind": "sandbags", "tier": 0, "manpower": 25, "buildTime": 8, "health": 300, "footprint": 1, "length": 3, "height": 1, "sightRange": 0 }
+  ]
+}

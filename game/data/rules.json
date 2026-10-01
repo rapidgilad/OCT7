@@ -1,0 +1,38 @@
+// Global combat & territory rules — docs/02-core-gameplay.md. Initial tuning values.
+{
+  "heavyCoverMultiplier": 0.5,
+  "lightCoverMultiplier": 0.75,
+  "coverDirectionThreshold": 0.2,
+  "coverSnapRadius": 4,
+  "losBlockHeight": 2.5,
+  "visionUpdateTicks": 2,
+
+  "suppressedThreshold": 0.5,
+  "pinnedThreshold": 0.9,
+  "suppressionDecayPerSecond": 0.12,
+  "missSuppressionFactor": 0.5,
+  "suppressedSpeedMultiplier": 0.5,
+  "suppressedAccuracyMultiplier": 0.75,
+  "pinnedAccuracyMultiplier": 0.5,
+
+  "retreatSpeedMultiplier": 1.3,
+  "retreatReceivedAccuracy": 0.5,
+  "retreatArriveDistance": 14,
+
+  "reinforceRadius": 30,
+  "reinforceSecondsPerModel": 3,
+  "healRadius": 30,
+  "healFractionPerSecond": 0.02,
+  "healDelaySeconds": 5,
+
+  "captureRadius": 10,
+  "captureSeconds": 20,
+  "extraCapturerBonus": 0.25,
+  "maxCaptureMultiplier": 2,
+  "ticketDrainPerVpPerSecond": 0.333,
+
+  "buildRange": 4,
+  "maxQueueLength": 5,
+  "rockVehicleSpeedMultiplier": 0.9,
+  "mudVehicleSpeedMultiplier": 0.8
+}

@@ -10,12 +10,22 @@ namespace OCT7.Sim.World
         MudFarmland = 2,
     }
 
+    /// <summary>Cover quality, both as a property of obstacle cells (source) and of the cells next to them.</summary>
+    public enum CoverType : byte
+    {
+        None = 0,
+        Light = 1,
+        Heavy = 2,
+    }
+
     /// <summary>
-    /// Walkability and ground-type grid. Cell (0,0) covers world [0, CellSize) on both axes.
+    /// Walkability, line-of-sight, cover-source and ground-type grid. Cell (0,0) covers world [0, CellSize) on both axes.
     /// </summary>
     public sealed class MapGrid
     {
         private readonly bool[] _blocked;
+        private readonly bool[] _losBlocked;
+        private readonly CoverType[] _coverSource;
         private readonly GroundType[] _ground;
 
         public MapGrid(int width, int height, float cellSize)
@@ -29,6 +39,8 @@ namespace OCT7.Sim.World
             Height = height;
             CellSize = cellSize;
             _blocked = new bool[width * height];
+            _losBlocked = new bool[width * height];
+            _coverSource = new CoverType[width * height];
             _ground = new GroundType[width * height];
         }
 
@@ -52,6 +64,26 @@ namespace OCT7.Sim.World
             if (InBounds(p))
             {
                 _blocked[ToIndex(p)] = blocked;
+            }
+        }
+
+        public bool BlocksLos(int x, int y) => InBounds(new GridPos(x, y)) && _losBlocked[y * Width + x];
+
+        public void SetLosBlocked(GridPos p, bool blocked)
+        {
+            if (InBounds(p))
+            {
+                _losBlocked[ToIndex(p)] = blocked;
+            }
+        }
+
+        public CoverType GetCoverSource(int x, int y) => InBounds(new GridPos(x, y)) ? _coverSource[y * Width + x] : CoverType.None;
+
+        public void SetCoverSource(GridPos p, CoverType type)
+        {
+            if (InBounds(p))
+            {
+                _coverSource[ToIndex(p)] = type;
             }
         }
 

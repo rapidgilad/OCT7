@@ -1,4 +1,5 @@
 // Factions — docs/factions/*.md. Display names are localization keys (regional variants, docs/01).
+// startingUnits spawn next to the HQ at match start (engineers + one line squad).
 {
   "factions": [
     {
@@ -7,8 +8,9 @@
       "displayName": "IDF",
       "uniqueResource": "intel",
       "voiceLanguage": "he",
-      "startingUnits": ["idf_engineers"],
-      "sandboxUnits": ["idf_engineers", "idf_golani", "idf_golani", "idf_mag_team", "idf_sniper", "idf_k9", "idf_namer", "idf_merkava"]
+      "hqStructure": "idf_hq",
+      "startingUnits": ["idf_engineers", "idf_golani"],
+      "sandboxUnits": ["idf_engineers", "idf_golani", "idf_golani", "idf_mag_team", "idf_sniper", "idf_spike_team", "idf_namer", "idf_merkava"]
     },
     {
       "id": "hamas",
@@ -16,7 +18,8 @@
       "displayName": "Hamas",
       "uniqueResource": "tunnels",
       "voiceLanguage": "ar-ps",
-      "startingUnits": ["hamas_diggers"],
+      "hqStructure": "hamas_hq",
+      "startingUnits": ["hamas_diggers", "hamas_fighters"],
       "sandboxUnits": ["hamas_diggers", "hamas_fighters", "hamas_fighters", "hamas_fighters", "hamas_rpg_team", "hamas_pkm_team", "hamas_ghoul_sniper", "hamas_kornet_team"]
     },
     {
@@ -25,7 +28,8 @@
       "displayName": "Hezbollah",
       "uniqueResource": "rocket_stockpile",
       "voiceLanguage": "ar-lb",
-      "startingUnits": ["hzb_engineers"],
+      "hqStructure": "hzb_hq",
+      "startingUnits": ["hzb_engineers", "hzb_fighters"],
       "sandboxUnits": ["hzb_engineers", "hzb_fighters", "hzb_fighters", "hzb_pkm_team", "hzb_rpg29_team", "hzb_kornet_team", "hzb_zu23_technical", "hzb_radwan"]
     }
   ]

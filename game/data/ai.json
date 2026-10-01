@@ -1,0 +1,77 @@
+// Skirmish AI — docs/04-ai-and-difficulty.md. One AI; difficulties are parameter sets.
+{
+  "difficulties": [
+    { "id": "easy",   "name": "Recruit",  "thinkIntervalSeconds": 4.0, "retreatHealthFraction": 0.15, "attackStrengthRatio": 1.6, "firstAttackArmyValue": 1400, "maxCappers": 1, "productionDelaySeconds": 10, "reinforce": false, "micro": false, "buildDefenses": false },
+    { "id": "normal", "name": "Veteran",  "thinkIntervalSeconds": 2.0, "retreatHealthFraction": 0.30, "attackStrengthRatio": 1.2, "firstAttackArmyValue": 1000, "maxCappers": 2, "productionDelaySeconds": 3,  "reinforce": true,  "micro": true,  "buildDefenses": true },
+    { "id": "hard",   "name": "Elite",    "thinkIntervalSeconds": 1.0, "retreatHealthFraction": 0.35, "attackStrengthRatio": 1.0, "firstAttackArmyValue": 800,  "maxCappers": 3, "productionDelaySeconds": 0,  "reinforce": true,  "micro": true,  "buildDefenses": true }
+  ],
+  "factions": [
+    {
+      "factionId": "idf",
+      "opening": [
+        { "build": "idf_t1" },
+        { "produce": "idf_golani", "count": 2 },
+        { "produce": "idf_mag_team" },
+        { "produce": "idf_engineers" },
+        { "build": "idf_t2" },
+        { "produce": "idf_golani" },
+        { "produce": "idf_spike_team" },
+        { "build": "idf_t3" },
+        { "produce": "idf_merkava" }
+      ],
+      "mix": [
+        { "unit": "idf_golani", "weight": 3 },
+        { "unit": "idf_mag_team", "weight": 1.5 },
+        { "unit": "idf_sniper", "weight": 1 },
+        { "unit": "idf_spike_team", "weight": 1.5 },
+        { "unit": "idf_namer", "weight": 1 },
+        { "unit": "idf_merkava", "weight": 2 }
+      ]
+    },
+    {
+      "factionId": "hamas",
+      "opening": [
+        { "produce": "hamas_fighters", "count": 2 },
+        { "build": "hamas_t1" },
+        { "produce": "hamas_pkm_team" },
+        { "produce": "hamas_rpg_team" },
+        { "build": "hamas_t2" },
+        { "produce": "hamas_fighters" },
+        { "produce": "hamas_kornet_team" },
+        { "build": "hamas_t3" },
+        { "produce": "hamas_elite" }
+      ],
+      "mix": [
+        { "unit": "hamas_fighters", "weight": 3 },
+        { "unit": "hamas_rpg_team", "weight": 2 },
+        { "unit": "hamas_pkm_team", "weight": 1.5 },
+        { "unit": "hamas_ghoul_sniper", "weight": 1 },
+        { "unit": "hamas_kornet_team", "weight": 1.5 },
+        { "unit": "hamas_elite", "weight": 2 }
+      ]
+    },
+    {
+      "factionId": "hezbollah",
+      "opening": [
+        { "produce": "hzb_fighters", "count": 2 },
+        { "build": "hzb_t1" },
+        { "produce": "hzb_pkm_team" },
+        { "produce": "hzb_rpg29_team" },
+        { "build": "hzb_t2" },
+        { "produce": "hzb_kornet_team" },
+        { "produce": "hzb_zu23_technical" },
+        { "build": "hzb_t3" },
+        { "produce": "hzb_radwan" }
+      ],
+      "mix": [
+        { "unit": "hzb_fighters", "weight": 3 },
+        { "unit": "hzb_pkm_team", "weight": 1.5 },
+        { "unit": "hzb_rpg29_team", "weight": 1.5 },
+        { "unit": "hzb_hs50_sniper", "weight": 1 },
+        { "unit": "hzb_kornet_team", "weight": 1.5 },
+        { "unit": "hzb_zu23_technical", "weight": 1 },
+        { "unit": "hzb_radwan", "weight": 2 }
+      ]
+    }
+  ]
+}
