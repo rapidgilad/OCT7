@@ -88,6 +88,9 @@ namespace OCT7.Sim.Data
         public float SuppressedThreshold { get; set; } = 0.5f;
         public float PinnedThreshold { get; set; } = 0.9f;
         public float SuppressionDecayPerSecond { get; set; } = 0.12f;
+
+        /// <summary>Suppression only decays after this long without incoming fire, so sustained MG fire pins.</summary>
+        public float SuppressionDecayDelaySeconds { get; set; } = 1.5f;
         public float MissSuppressionFactor { get; set; } = 0.5f;
         public float SuppressedSpeedMultiplier { get; set; } = 0.5f;
         public float SuppressedAccuracyMultiplier { get; set; } = 0.75f;

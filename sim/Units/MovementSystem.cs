@@ -1,17 +1,18 @@
-using OCT7.Sim.Pathfinding;
+using OCT7.Sim.World;
 
 namespace OCT7.Sim.Units
 {
-    /// <summary>Plans paths for move orders and advances squads along them each tick.</summary>
+    /// <summary>
+    /// Plans paths for move orders and advances squads along them each tick, applying retreat, suppression,
+    /// pinning and ground-type speed modifiers (docs/02 §3).
+    /// </summary>
     public sealed class MovementSystem
     {
-        private readonly SimWorld _world;
-        private readonly GridPathfinder _pathfinder;
+        private readonly Simulation _sim;
 
-        public MovementSystem(SimWorld world, GridPathfinder pathfinder)
+        public MovementSystem(Simulation sim)
         {
-            _world = world;
-            _pathfinder = pathfinder;
+            _sim = sim;
         }
 
         /// <summary>Plans a path to the target. Returns false (and stops the squad) if no path exists.</summary>
@@ -19,7 +20,8 @@ namespace OCT7.Sim.Units
         {
             squad.Path.Clear();
             squad.PathIndex = 0;
-            return _pathfinder.FindPath(squad.Position, target, squad.Path);
+            squad.RepathTick = _sim.Tick;
+            return _sim.Pathfinder.FindPath(squad.Position, target, squad.Path);
         }
 
         public void Stop(Squad squad)
@@ -28,9 +30,54 @@ namespace OCT7.Sim.Units
             squad.PathIndex = 0;
         }
 
+        /// <summary>Re-plans every moving squad to its destination (after the grid changed).</summary>
+        public void RepathMovingSquads()
+        {
+            foreach (var s in _sim.World.Squads)
+            {
+                if (s.IsMoving)
+                {
+                    OrderMove(s, s.Destination);
+                }
+            }
+        }
+
+        public float SpeedOf(Squad s)
+        {
+            var rules = _sim.Rules;
+            float speed = s.Def.MoveSpeed;
+            if (s.IsRetreating)
+            {
+                speed *= rules.RetreatSpeedMultiplier;
+            }
+            else if (s.SuppressionState == SuppressionState.Pinned)
+            {
+                return 0f;
+            }
+            else if (s.SuppressionState == SuppressionState.Suppressed)
+            {
+                speed *= rules.SuppressedSpeedMultiplier;
+            }
+
+            if (s.Def.IsVehicle)
+            {
+                var ground = _sim.Map.Grid.GetGround(_sim.Map.Grid.WorldToCell(s.Position));
+                if (ground == GroundType.Rock)
+                {
+                    speed *= rules.RockVehicleSpeedMultiplier;
+                }
+                else if (ground == GroundType.MudFarmland)
+                {
+                    speed *= rules.MudVehicleSpeedMultiplier;
+                }
+            }
+
+            return speed;
+        }
+
         public void Tick()
         {
-            var squads = _world.Squads;
+            var squads = _sim.World.Squads;
             for (int i = 0; i < squads.Count; i++)
             {
                 var s = squads[i];
@@ -40,7 +87,7 @@ namespace OCT7.Sim.Units
                     continue;
                 }
 
-                float remaining = s.Def.MoveSpeed * SimConfig.TickSeconds;
+                float remaining = SpeedOf(s) * SimConfig.TickSeconds;
                 while (remaining > 0f && s.IsMoving)
                 {
                     var waypoint = s.Path[s.PathIndex];

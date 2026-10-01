@@ -10,6 +10,7 @@
   "suppressedThreshold": 0.5,
   "pinnedThreshold": 0.9,
   "suppressionDecayPerSecond": 0.12,
+  "suppressionDecayDelaySeconds": 1.5,
   "missSuppressionFactor": 0.5,
   "suppressedSpeedMultiplier": 0.5,
   "suppressedAccuracyMultiplier": 0.75,

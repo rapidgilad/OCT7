@@ -1,52 +1,54 @@
 using System;
-using System.Collections.Generic;
-using OCT7.Sim.Data;
-using OCT7.Sim.Units;
 
 namespace OCT7.Sim.Economy
 {
     /// <summary>
-    /// Per-tick resource income. V0: HQ base income and manpower upkeep (docs/02 §1).
-    /// Sector income arrives with territory control.
+    /// Per-tick resource income (docs/02 §1): HQ base income + connected sectors, minus manpower upkeep.
     /// </summary>
     public sealed class EconomySystem
     {
-        private readonly EconomyDef _def;
-        private readonly SimWorld _world;
-        private readonly IReadOnlyList<PlayerState> _players;
+        private readonly Simulation _sim;
 
-        public EconomySystem(EconomyDef def, SimWorld world, IReadOnlyList<PlayerState> players)
+        public EconomySystem(Simulation sim)
         {
-            _def = def;
-            _world = world;
-            _players = players;
+            _sim = sim;
         }
 
         public void InitializePlayer(PlayerState player)
         {
-            player.Manpower = _def.StartManpower;
-            player.Munitions = _def.StartMunitions;
-            player.Fuel = _def.StartFuel;
-            player.Tickets = _def.StartingTickets;
+            var def = _sim.Data.Economy;
+            player.Manpower = def.StartManpower;
+            player.Munitions = def.StartMunitions;
+            player.Fuel = def.StartFuel;
+            player.Tickets = def.StartingTickets;
         }
 
         /// <summary>Manpower income per minute after upkeep (never negative).</summary>
         public float ManpowerIncomePerMinute(PlayerState player)
         {
-            int pop = _world.PopulationOf(player.Id);
-            float upkeep = Math.Max(0, pop - _def.UpkeepFreePop) * _def.UpkeepManpowerPerPopPerMinute;
-            return Math.Max(0f, _def.HqManpowerPerMinute - upkeep);
+            var def = _sim.Data.Economy;
+            int standard = 0, munitions = 0, fuel = 0;
+            _sim.Territory.CountConnected(player.Id, out standard, out munitions, out fuel);
+            int pop = _sim.World.PopulationOf(player.Id);
+            float upkeep = Math.Max(0, pop - def.UpkeepFreePop) * def.UpkeepManpowerPerPopPerMinute;
+            return Math.Max(0f, def.HqManpowerPerMinute + standard * def.StandardSectorManpowerPerMinute - upkeep);
         }
 
         public void Tick()
         {
+            var def = _sim.Data.Economy;
             const double perTick = 1.0 / SimConfig.TicksPerMinute;
-            for (int i = 0; i < _players.Count; i++)
+            var players = _sim.Players;
+            for (int i = 0; i < players.Count; i++)
             {
-                var p = _players[i];
-                p.Manpower += ManpowerIncomePerMinute(p) * perTick;
-                p.Munitions += _def.HqMunitionsPerMinute * perTick;
-                p.Fuel += _def.HqFuelPerMinute * perTick;
+                var p = players[i];
+                _sim.Territory.CountConnected(p.Id, out _, out int munitions, out int fuel);
+                p.ManpowerIncome = ManpowerIncomePerMinute(p);
+                p.MunitionsIncome = def.HqMunitionsPerMinute + munitions * def.MunitionsSectorPerMinute;
+                p.FuelIncome = def.HqFuelPerMinute + fuel * def.FuelSectorPerMinute;
+                p.Manpower += p.ManpowerIncome * perTick;
+                p.Munitions += p.MunitionsIncome * perTick;
+                p.Fuel += p.FuelIncome * perTick;
             }
         }
     }
