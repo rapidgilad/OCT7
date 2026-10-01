@@ -51,8 +51,9 @@ Minimap pings and a bark/radio line for these events:
 Main menu → Skirmish → choose map → choose faction, doctrine and hero (loadout screen with a doctrine-tree preview) → choose AI faction (or random), AI difficulty and the AI's doctrine/hero (or random) → choose win condition → launch.
 
 ## Localization
-- **UI languages:** English, Hebrew, Arabic.
-- **RTL support:** Hebrew and Arabic need right-to-left layout, and Arabic needs **letter shaping**. In Unity, use **RTLTMPro** on top of TextMeshPro. Mirrored layouts apply to menus only; the HUD keeps its fixed positions so control muscle memory stays the same.
+- **UI languages:** English in V1; Hebrew and Arabic UI in V1.1. Subtitles for the native-language VO are English from V1.
+- **RTL support:** Hebrew and Arabic need right-to-left layout, and Arabic needs **letter shaping**. Godot 4 supports both natively (TextServer with HarfBuzz/ICU, BiDi and Control `layout_direction`), so no plugin is needed. With Unity, RTLTMPro would be required. Mirrored layouts apply to menus only; the HUD keeps its fixed positions so control muscle memory stays the same.
+- All strings go through Godot's translation system (CSV/PO) from day 1, even before Hebrew/Arabic ship.
 - **Fonts:**
   - Hebrew: Heebo / Assistant
   - Arabic: Noto Kufi / Cairo
@@ -67,7 +68,10 @@ Main menu → Skirmish → choose map → choose faction, doctrine and hero (loa
 - Screen-shake toggle
 - Bark volume separate from SFX volume
 
-## Tutorial — "Basic Training"
+## Onboarding
+**Solo V1:** rich tooltips (unit role, strengths, counters), a one-screen **faction primer** per faction, and "first match" hints (contextual pop-ups the first time you see suppression, tunnels and so on). The scripted tutorial below is post-V1.
+
+### Tutorial — "Basic Training" (post-V1)
 A scripted 10–15 minute map covering:
 1. Select and move; cover
 2. Suppression and retreat

@@ -1,142 +1,141 @@
-# 08 — Engine & Technology
+# 08 — Engine & Technology (Solo Developer + Claude Code)
 
-## 1. Recommendation: Unity 6 LTS (URP), C#
+## 1. Recommendation: Godot 4 (.NET / C#) + a pure C# simulation core
 
-### Why Unity for this project
-| Reason | Detail |
-|---|---|
-| **Genre-proven** | Iron Harvest (a CoH-style squad RTS) and Broken Arrow (a large-scale modern-warfare RTS) are both built on Unity. The genre's hard problems (many units, cover, destruction, line of sight) have been solved on this engine before. |
-| **Iteration speed** | C# with fast domain reload, ScriptableObject data assets, and designer-friendly inspectors (Odin). RTS balance needs thousands of small data tweaks. |
-| **Scale** | DOTS / Jobs / Burst for projectiles, line-of-sight grids, influence maps and the AI. A hybrid approach (GameObjects for units, Jobs for heavy systems) keeps complexity manageable. |
-| **Ecosystem** | A* Pathfinding Project Pro, FMOD/Wwise integrations, RTLTMPro (Hebrew/Arabic), Cinemachine/Timeline (future cinematics), GameCI for builds. |
-| **Hiring** | A large C# talent pool, including in Israel. |
-| **Cost** | Personal is free under $200K revenue; Pro is a per-seat annual subscription. No runtime fee. |
-| **Hardware reach** | URP scales to mid-range PCs and laptops, which widens the RTS audience. |
+### Why the recommendation changed from Unity
+The first draft assumed a team of about 15. For **one developer who builds mostly through Claude Code**, the deciding factors are different:
 
-**Trade-offs:**
-- Top-end visuals take more art and tech-art effort than Unreal 5.
-- Unity's corporate/pricing history is a business risk. Mitigation: keep the simulation core engine-agnostic (pure C#).
-
-### Alternatives
-| Engine | Choose it if | Trade-offs |
+| Factor | Godot 4 .NET | Unity 6 |
 |---|---|---|
-| **Unreal Engine 5** | Visual fidelity and cinematic marketing are the #1 priority and the team is strong in C++ | Lumen/Nanite are costly from a top-down camera with hundreds of units; Mass Entity is less proven for RTS; deterministic lockstep is harder; slower iteration (C++ compile); 5% royalty above $1M gross. Excellent for **pre-rendered cinematics** later. |
-| **Godot 4** | Zero license cost, open source, very small team | Weaker large-scale 3D performance and tooling; few RTS-grade plugins (pathfinding, destruction); higher technical risk |
-| **Custom engine** | Large, experienced engine team | Not viable for V1 time and budget |
+| **Works with Claude Code** | Scenes (`.tscn`) and resources (`.tres`) are short, readable text files that Claude can write and edit directly. The editor is small and runs **headless on Linux**, so Claude can build and test in the cloud session. | Scenes and prefabs are long, noisy YAML that is hard to edit by text. Headless and CI use needs license activation. Many tasks need the GUI editor. |
+| **Cost** | Free, MIT license, no seats, no royalties | Free under $200K revenue, then per-seat Pro |
+| **Install / footprint** | About 100–200 MB, starts in seconds | Many GB, slow imports |
+| **Code visibility** | MIT engine, ideal for public code | Possible, but contributors need Unity and Asset Store items can't be shared |
+| **Asset ecosystem** | Smaller. Use engine-agnostic sources (FBX/glTF packs, Mixamo, CC0) | Huge Asset Store |
+| **RTS precedent** | Fewer shipped 3D RTS games; you are closer to the frontier | Iron Harvest, Broken Arrow |
+| **3D performance at RTS scale** | Adequate for the solo V1 scale (≈ 2 × 100 pop) with MultiMesh, LODs and a simulation in C# | Stronger (DOTS/Burst) |
 
-**Hybrid option (recommended for later):** build the game in Unity and produce V2 pre-rendered cinematics in Unreal 5 (MetaHuman) or Blender, played back as video. This gives cinematic quality without engine lock-in.
+**Verdict:** Godot 4 .NET is the better fit for a solo developer coding with Claude Code. Unity stays a valid choice if you prefer its editor, already know it, or want to rely heavily on Asset Store art.
+
+**Hedge:** the simulation is **pure C# with no engine references**. If the project grows into a team, the presentation layer can be ported to Unity without rewriting the game rules.
 
 ## 2. Architecture
 
-### Deterministic simulation core (decide now)
-Even though V1 is single-player, the simulation is built **deterministic** from day 1:
-
+### Project layout (monorepo)
 ```
- Player input ─┐                   ┌─> Presentation (Unity): interpolated
- AI decisions ─┼─> Command Queue ─>│   rendering, animation, VFX, audio, UI
- (same path)   │   (tick-stamped)  │
-               └───────────────────┴─> Simulation Core (pure C#, fixed-point,
-                                       fixed 8–10 Hz tick, seeded RNG)
+OCT7/
+├── docs/                      # design docs (this folder)
+├── data/                      # all balance data: units, weapons, abilities, build orders (JSON/CSV)
+├── sim/                       # pure C# class library (.NET 8+) — THE GAME RULES
+│   ├── Core/                  # tick loop, command queue, seeded RNG, entity store
+│   ├── World/                 # map grid, sectors, ground types, cover nodes, LOS grid
+│   ├── Combat/                # accuracy, cover, suppression, armor, criticals, interceptors
+│   ├── Units/                 # squads, vehicles, veterancy, heroes, abilities
+│   ├── Economy/               # resources, income, upkeep, tech tiers, construction
+│   ├── Factions/              # Intel (IDF), TunnelNetwork (Hamas), RocketStockpile (Hezbollah)
+│   ├── Pathfinding/           # grid A* + flow fields + steering
+│   └── AI/                    # strategic utility AI, influence maps, squad behaviors
+├── sim.tests/                 # xUnit tests — run with `dotnet test`, no engine needed
+├── tools/
+│   └── MatchRunner/           # headless CLI: AI vs AI × N matches → win-rate report
+└── game/                      # Godot 4 .NET project — PRESENTATION ONLY
+    ├── scenes/                # maps, units, UI (.tscn)
+    ├── scripts/               # C# glue: reads sim state, renders, plays audio, sends commands
+    └── assets/                # models, textures, audio (see licensing)
 ```
 
-- **Pure C# simulation** with fixed-point math and a seeded RNG. No Unity physics in gameplay logic. The presentation layer reads simulation state and interpolates.
-- **Benefits:**
-  - Internal **replays** (command logs) for bug reproduction.
-  - The **headless AI-vs-AI batch runner** (runs faster than real time) for balance work.
-  - **Lockstep multiplayer** in V2 without a rewrite.
-- **Cost:** about 10–15% more upfront engineering. This is the single most important architectural decision.
+### Simulation rules (what makes this solo-friendly)
+- **Fixed tick (10 Hz), command queue, seeded RNG.** Every player and AI action is a command.
+- **Same-machine determinism** using plain floats is enough for V1. It gives replays and repeatable bug reproduction. Fixed-point math (cross-machine lockstep) is needed only for V2 multiplayer, so it is postponed.
+- **The simulation knows nothing about Godot.** Godot reads simulation state each frame, interpolates positions, and plays animations, VFX and audio.
+- **Everything is testable headless.** `dotnet test` and `MatchRunner` run in the Claude Code cloud container and in GitHub Actions. This is your QA team.
 
-### Core modules
-| Module | Notes |
+### Systems and solo-simplified approaches
+| System | Solo V1 approach |
 |---|---|
-| Selection & commands | Command pattern; every action is serializable |
-| Pathfinding | **A\* Pathfinding Project Pro**: recast graphs, dynamic graph updates when buildings collapse, RVO local avoidance; custom vehicle pathing with turning radius and reverse |
-| Formations & squad movement | Squad leader + member slots; cover-aware slot assignment |
-| Cover system | Cover nodes generated from tagged props at bake time; runtime updates on destruction |
-| Combat resolver | Accuracy bands, received accuracy, cover, suppression, armor/penetration, criticals |
-| Interceptor system | Shared component for Trophy, Iron Dome, Iron Beam and ERA |
-| Line of sight / fog of war | Height-aware grid (1–2 m cells) computed in Burst jobs; GPU fog texture for rendering |
-| Detection / camouflage | Camo vs detection levels per unit; reveal timers |
-| Territory & economy | Sector graph with supply connectivity |
-| Construction & tech | Placement validation, build progress, tier requirements |
-| **Tunnel network** | Graph of entrances; travel-time model; capacity; reroute on destruction |
-| Abilities framework | Data-defined: targeting type, delay, area, effects, costs, cooldowns |
-| Air call-ins & AA | Flight-path entities; AA engagement; abort logic |
-| Destruction | Pre-fractured damage states → rubble prefab → navmesh and cover update (no full physics) |
-| Veterancy & heroes | XP ledger, modifiers pipeline |
-| AI | See [04](04-ai-and-difficulty.md) |
-| Bark manager | See [06](06-audio-voice-cinematics.md) |
-| Save / settings | Settings, keybinds, profile; no mid-match saves in V1 |
+| Pathfinding | Grid (2 m cells) A* + flow fields for groups + simple steering. In-simulation, deterministic, testable. Vehicles use a clearance-aware grid. |
+| Cover | Cover nodes placed by tagging props in the map; heavy/light/negative |
+| Line of sight / fog of war | Height-aware grid in the simulation; Godot renders a fog texture from it |
+| Destruction | 2–3 mesh states per building (intact → damaged → rubble); the grid updates cover and pathing |
+| Combat | Probabilistic model as in [02](02-core-gameplay.md) |
+| Interceptors | One shared component for Trophy, Iron Dome and ERA |
+| Tunnels | Graph of entrances with a travel-time model |
+| Abilities | Data-driven (JSON): target type, delay, area, effect list, costs, cooldown |
+| AI | Utility strategic layer + influence map + squad finite-state machines (FSMs); see [04](04-ai-and-difficulty.md) |
+| Rendering of crowds | MultiMeshInstance3D for props; skinned meshes with LOD for soldiers; impostors for far props |
+| Audio | Godot audio buses + a simple bark manager (priority + cooldown) |
 
 ### Data pipeline
-- **Every stat lives in data.** Units, weapons, abilities, upgrades, costs and build orders are defined in **balance spreadsheets**.
-- An editor importer converts them to ScriptableObjects, which are baked to runtime blobs.
-- Designers change balance without touching code. Spreadsheets are diffable in Git as CSV.
-- Validation tool: checks references, missing localization keys and out-of-range values.
+- Balance lives in `data/` as JSON (or CSV for spreadsheets). You or Claude can edit numbers in plain text. Diffs are reviewable in Git.
+- A validator test checks references, ranges and missing localization keys on every `dotnet test`.
 
-## 3. What we need
+## 3. What you need (solo)
 
-### Software & licenses
-| Item | Purpose | Notes |
+### Software (all free unless noted)
+| Item | Purpose |
+|---|---|
+| **Godot 4.x .NET build** (latest stable) | Engine |
+| **.NET 8+ SDK** | C# simulation, tests, MatchRunner |
+| **Claude Code** | Main coding partner; can run tests and headless matches in the cloud |
+| VS Code (C# Dev Kit) or JetBrains Rider (free for non-commercial use) | Local editing and debugging |
+| **Blender** | Kitbashing, fixing and retopologizing purchased/CC0 models; simple animation |
+| Krita / GIMP | Textures, UI icons |
+| Audacity / Reaper (cheap license) | Audio editing |
+| Git + GitHub (+ Git LFS for binaries) | Version control (Perforce is unnecessary solo) |
+| GitHub Actions | Runs `dotnet test` and nightly AI-vs-AI batches automatically |
+
+### Assets (where a solo developer gets art and sound)
+| Need | Sources | Rough cost |
 |---|---|---|
-| Unity 6 LTS (Pro seats) | Engine | Per-seat subscription; Personal is fine during prototyping if eligible |
-| JetBrains Rider (or Visual Studio) | C# IDE | |
-| Blender (free) or Autodesk Maya | 3D modeling and animation | |
-| Substance 3D Painter / Designer | Texturing | |
-| ZBrush | High-poly sculpting (characters, heroes) | |
-| Houdini Indie (optional) | Destruction and fracture authoring, procedural rubble | |
-| Photoshop / Krita | 2D, UI, concept art | |
-| FMOD Studio **or** Wwise | Adaptive audio and VO implementation | Both have free indie tiers |
-| Reaper / Pro Tools | Audio editing | |
-| Figma | UI/UX design | |
+| Soldiers, weapons, props | Low-poly / stylized military packs (e.g., Synty POLYGON military packs), Quaternius (CC0), Kenney (CC0), Sketchfab (CC-BY or paid) | $0–800 |
+| Animations | **Mixamo** (free), plus retargeted packs | $0–200 |
+| Vehicles (Merkava, Namer, D9R, technicals, MLRS) | Sketchfab purchases, or commissioned freelance low-poly models | $300–2,000 |
+| Environment (urban blocks, hills, greenhouses) | Modular packs + Blender kitbash | $100–500 |
+| SFX | Sonniss GDC bundles (free), paid weapon packs | $0–300 |
+| Music | Game-licensed music packs, or a commissioned composer | $0–2,000 |
+| Voices | AI TTS with Hebrew and Arabic support, plus a native speaker to review scripts | $10–100/month while producing VO |
 
-### Middleware & plugins (Unity)
-| Item | Purpose |
+**Art direction for a solo developer:** stylized, readable at RTS distance (clean silhouettes, strong team colors, low-poly with good lighting). Realistic AAA art is a team-scale goal.
+
+**Licensing rule:** read each pack's license. Most paid packs (Synty included) allow use in any engine and commercial games but **forbid redistributing the raw files**.
+
+### If the code will be open source
+| Item | Recommendation |
 |---|---|
-| A* Pathfinding Project Pro | Pathfinding, dynamic navmesh, RVO |
-| Odin Inspector | Designer tooling and data editors |
-| RTLTMPro | Hebrew / Arabic right-to-left text and Arabic shaping |
-| MicroSplat | Terrain shading |
-| DOTween | UI and presentation tweens |
-| Cinemachine + Timeline (built-in) | RTS camera, future cinematics |
-| Steamworks.NET (or Facepunch.Steamworks) | Steam integration |
-| Sentry or Backtrace | Crash reporting |
-| Superluminal / Unity Profiler | Performance profiling |
+| Code license | MIT (maximum adoption) or GPL-3.0 (forks must stay open) |
+| Paid assets | Keep them **out of the public repo**: a private Git LFS repo or private submodule, or a download step |
+| Public repo assets | CC0 placeholders (Kenney/Quaternius) so anyone can build and run it |
+| Your own original art and audio | A separate license, e.g., CC BY-NC 4.0 or all rights reserved |
 
-### Version control & CI
-| Item | Purpose |
-|---|---|
-| **Perforce Helix Core** (free up to 5 users) **or Unity Version Control** | Large binary art assets, file locking |
-| GitHub (this repo) | Design docs, and optionally code with Git LFS |
-| **GameCI** on GitHub Actions, or Unity Build Automation | Automated nightly builds, tests, headless AI batch runs |
+### Your hardware
+- Any modern PC works for Godot. Comfortable: 6–8-core CPU, 32 GB RAM, RTX 3060 or better, SSD.
+- Test regularly on a weaker machine or laptop. The minimum target is GTX 1060-class, 8–16 GB RAM.
 
-**Recommendation:** use Perforce or Unity Version Control for the game project, and keep this GitHub repo for design docs and balance spreadsheets.
-
-### Production tools
-- Jira or Linear (tasks), Confluence or Notion (wiki), Miro (boards), Discord (playtest community), Google Sheets (balance).
-
-### Development hardware (per seat)
-| Role | Spec |
-|---|---|
-| Programmers / designers | Ryzen 9 / Core i9, 64 GB RAM, RTX 4070 Ti or better, 2 TB NVMe, dual monitors |
-| Artists / tech art | Same, with an RTX 4080-class GPU and 128 GB RAM for Houdini/ZBrush users |
-| Build server | 16+ cores, 128 GB RAM, fast NVMe (for nightly builds and AI batch runs) |
-| Mocap | Rokoko Smartsuit Pro + gloves, or an outsourced mocap studio; Asset Store military animation packs as placeholders |
-
-### Player target specs (V1)
+### Player target specs (solo V1)
 | | Minimum | Recommended |
 |---|---|---|
-| GPU | GTX 1660 / RX 5600 | RTX 3060 / RX 6600 XT |
-| CPU | 4-core (i5-8400 class) | 6-core (Ryzen 5 5600 class) |
-| RAM | 16 GB | 16 GB |
-| Storage | 30 GB SSD | 30 GB SSD |
-| Target | 1080p / 45+ fps at full pop | 1440p / 60 fps |
+| GPU | GTX 1060 / RX 580 | RTX 3060 |
+| CPU | 4-core | 6-core |
+| RAM | 8 GB | 16 GB |
+| Target | 1080p / 45+ fps at full pop | 1080p–1440p / 60 fps |
 
-## 4. Performance budget (target at full pop, ~200 pop total)
+## 4. Performance budget (full pop, ~200 pop total)
 | System | Budget per frame (minimum spec) |
 |---|---|
 | Simulation tick (amortized) | ≤ 4 ms |
 | AI (all layers) | ≤ 2 ms |
-| Line of sight / fog of war | ≤ 1.5 ms (Burst jobs) |
-| Rendering | ≤ 12 ms |
-| Draw calls | ≤ 3,000 (GPU instancing for infantry, LODs, impostors for distant props) |
+| Line of sight / fog of war | ≤ 1.5 ms |
+| Rendering | ≤ 14 ms |
+
+## 5. Working effectively with Claude Code
+1. **`CLAUDE.md` at the repo root.** Project overview, folder layout, conventions, how to run tests and MatchRunner. Future sessions start with full context.
+2. **One feature = one small task.** Ask for one system at a time (e.g., "suppression meter + tests"), referencing the design doc section.
+3. **Tests first for simulation rules.** Every rule in [02](02-core-gameplay.md) becomes a test (e.g., "heavy cover halves hit chance"). Claude runs them in the cloud.
+4. **Use MatchRunner as an automated playtester.** After a balance change, run 200 AI-vs-AI matches and read the win-rate report.
+5. **You own the feel.** Claude writes and tests code; you play the build in Godot locally and judge whether it's fun.
+6. **Commit often to feature branches;** the docs in `docs/` remain the source of truth.
+
+## 6. When the team grows
+- The pure C# simulation, data folder and design docs scale without change.
+- Possible additions: Perforce or Unity Version Control for large art, dedicated artists, recorded VO.
+- Optionally port the presentation layer to Unity or Unreal if top-end visuals become the priority. The game rules stay in `sim/`.

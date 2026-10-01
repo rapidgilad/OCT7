@@ -2,6 +2,12 @@
 
 The skirmish AI **is** the V1 product. It is the highest technical risk, so AI development starts in **month 1** and runs continuously.
 
+> **Solo V1 simplifications**
+> - One AI codebase. **Easy / Normal / Hard are parameter sets** (the table in section 2), not separate AIs.
+> - The tactical layer uses **simple finite-state machines (FSMs)** per squad (Idle → Move → Engage → Retreat → Reinforce) instead of full behavior trees. Upgrade to behavior trees only if the FSMs become unmanageable.
+> - Influence maps start with just two layers (threat + value). Add the others when a behavior needs them.
+> - The AI lives in `sim/AI/`, so it runs headless in **MatchRunner** and in Claude Code's cloud session. This is your automated QA.
+
 ## 1. Architecture (three layers)
 ```
 ┌──────────────────────────────────────────────────────────────┐

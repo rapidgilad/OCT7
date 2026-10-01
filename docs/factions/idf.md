@@ -13,6 +13,20 @@ Expensive, elite and technological. The IDF has the best armor, the best detecti
 **Visual identity:** olive and sand-tan, digital displays, clean angular silhouettes.
 **Voice:** Hebrew, calm and professional radio discipline, military slang.
 
+## Solo V1 core roster
+This is what ships in V1. Everything else in this document is the long-term vision.
+
+| Tier | V1 content |
+|---|---|
+| HQ | Yahalom Combat Engineers, Oketz K9 Team, *Skylark Drone* ability |
+| T1 | Golani Rifle Squad, MAG Machine Gun Team, Sniper Team |
+| T2 | Spike MR ATGM Team, Namer Heavy APC (with Ambulance Kit = CASEVAC), Iron Dome Battery |
+| T3 | Merkava Mk.4M, D9R Armored Bulldozer; **T4 content folded in:** special weapons below |
+| Special weapons | F-16I Precision Strike, GBU-28 Bunker-Buster |
+| Doctrine | **Air Force & Intelligence** (in V1, rank 4 becomes *Apache Strafing Run*, since the T4 Apache isn't in V1) |
+| Hero | **Maj. Ido "Ze'ev" Ronen** |
+| Later | Mortar, Hummer, Sayeret, Eitan, M109, Pereh, Field Aid Station, Iron Beam, Armored Corps doctrine, Lt. Col. Adler |
+
 ## Unique mechanics
 1. **Intel (INT, cap 100)**
 

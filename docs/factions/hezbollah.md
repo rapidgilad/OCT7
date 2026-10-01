@@ -13,6 +13,20 @@ A semi-conventional force: ATGM masters, fortified hillsides, a deep rocket arse
 **Visual identity:** uniform olive and woodland camo, more conventional gear, camouflage nets, hillside bunkers.
 **Voice:** Lebanese Arabic. Disciplined, structured radio calls.
 
+## Solo V1 core roster
+This is what ships in V1. Everything else in this document is the long-term vision.
+
+| Tier | V1 content |
+|---|---|
+| HQ | Combat Engineers (bunkers, trenches, camo nets, depots, mines), Resistance Fighters |
+| T1 | PKM MG Team, RPG-29 Team, HS.50 Sniper |
+| T2 | Kornet ATGM Team (with Double-Tap), ZU-23-2 Technical, Bunker, Rocket Depot |
+| T3 | Radwan Commandos, Katyusha MLRS Truck; **T4 content folded in:** Burkan |
+| Special weapons | Burkan Heavy Rocket, Fadi Precision Rocket (doctrine rank 5) |
+| Doctrine | **Strategic Firepower** (in V1, its drone abilities are direct call-ins and need no Drone Workshop) |
+| Hero | **"Al-Sayyad" (The Hunter)** |
+| Later | Forward Observer, Motorcycle Raiders, MANPADS, 120mm Mortar, Almas, T-72, Drone Workshop, "358" SAM, Radwan Assault doctrine, "Al-Jabal" |
+
 ## Unique mechanics
 1. **Rocket Stockpile (RS, cap 200)**
    - **Rocket Depots** (200 MP / 30 FU, max 3) generate +6 RS/min each. They are camo 2 while no enemy is within 30 m.

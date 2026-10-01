@@ -39,6 +39,8 @@ Each unit has XP thresholds by cost class:
 
 ## 2. Heroes
 
+> **Solo V1:** each faction ships **one hero**: IDF Ronen, Hamas Al-Khuld, Hezbollah Al-Sayyad. The hero picker exists from the start, so the second heroes slot in later without UI changes.
+
 ### Rules
 - Choose **1 of 2** heroes in the pre-match loadout. The hero deploys from the HQ after **T1** is built.
 - Only **one hero** may be on the field at a time.

@@ -1,6 +1,17 @@
 # 06 — Audio, Voice & Cinematics
 
 ## 1. Unit voices (V1)
+
+> **Solo V1 voice plan**
+> - **Volume:** about 25 lines per unit type (select 3, move 4, attack 3, ability 3, under fire 2, retreat 2, casualty 2, vet-up 1, callouts 5), about 60 per hero and about 40 per HQ announcer. That's **≈ 350 per faction, ≈ 1,000 total.**
+> - **Production:**
+>   1. Claude drafts each line in English plus Hebrew, Gazan Arabic or Lebanese Arabic, with a transliteration.
+>   2. A **native speaker reviews** each faction's script (paid hourly).
+>   3. Lines are generated with **AI text-to-speech (TTS)** voices, 3–4 distinct voices per faction. Pitch and radio filters add variety.
+>   4. Use licensed TTS voices only. **No cloning of real people's voices.**
+> - **Upgrade path:** the script database and line IDs stay the same, so human actors can replace TTS files one by one later.
+> - The tables below describe the full-scale target.
+
 ### Languages
 | Faction | VO language | Subtitles |
 |---|---|---|
@@ -49,6 +60,9 @@ An English dub is a V2 option. Native languages are the V1 default for authentic
 - **Vet switching:** Vet 3 units use the "veteran" variant set.
 
 ## 2. Music & SFX
+
+> **Solo V1:** use game-licensed music packs or one commissioned 3-layer track per faction. SFX come from free GDC bundles (Sonniss) plus one paid weapons pack. Godot audio buses handle the layering.
+
 - **Adaptive score:** three intensity layers (calm, tension, combat) crossfaded by the combat-intensity metric, plus a short motif per faction. The score is **original**: no real anthems or organizational songs.
 - **Instrumentation:**
   - IDF: modern orchestral with percussion.
@@ -69,7 +83,7 @@ An English dub is a V2 option. Native languages are the V1 default for authentic
 
 | V1 prep item | Why |
 |---|---|
-| Camera rig hooks (Cinemachine virtual cameras on maps) | Map intros and briefings can be added without rework |
+| Camera rig hooks (named Camera3D markers + AnimationPlayer camera paths on maps) | Map intros and briefings can be added without rework |
 | Character rig standard (shared skeleton + facial blendshape set) | The same models work in cutscenes |
 | VO metadata includes speaker ID + emotion tags | Lip-sync and performance capture later |
 | Hero model LOD0 built to "close-up" quality | Heroes are the likely cinematic stars |
@@ -77,7 +91,7 @@ An English dub is a V2 option. Native languages are the V1 default for authentic
 ### Recommended V2 approach: hybrid
 | Option | Pros | Cons |
 |---|---|---|
-| **In-engine (Unity Timeline + Cinemachine)** | Consistent with gameplay visuals, cheap iteration, small download | Lower fidelity than offline rendering |
+| **In-engine (Godot AnimationPlayer + camera paths)** | Consistent with gameplay visuals, cheap iteration, small download | Lower fidelity than offline rendering |
 | **Pre-rendered (Unreal Engine 5 + MetaHuman, or Blender)** | Top-tier fidelity for trailers and key story beats | Large video files; visual mismatch with gameplay |
 | **Hybrid (recommended)** | In-engine for briefings and map intros; pre-rendered for 3–5 key story scenes and trailers | Two pipelines to maintain |
 

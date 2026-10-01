@@ -18,6 +18,8 @@
 - **Neutral buildings:** garrisonable and destructible into rubble. Religious buildings and hospitals are non-interactive set dressing (see [01](01-vision-and-scope.md)).
 - **No civilian NPCs.** Ambient life is limited to animals and environmental effects (dust, smoke, wind on vegetation).
 
+> **Solo V1:** ship **2 maps**. Build **Border Ridge Outpost** first (balanced, ideal for tuning), then **Khan Sahil** (urban showcase, tunnels, destruction). The others are post-V1. Map size can start at 300 × 300 m to reduce art load.
+
 ## V1 map pool
 ### 1. Khan Sahil — dense urban (Hamas "home turf")
 - Dense 3–5-story concrete blocks, narrow alleys, one central boulevard that vehicles can use, and a market square (the central VP).
