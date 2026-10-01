@@ -2,7 +2,7 @@
 {
   "difficulties": [
     { "id": "easy",   "name": "Recruit",  "thinkIntervalSeconds": 4.0, "retreatHealthFraction": 0.15, "attackStrengthRatio": 1.6, "firstAttackArmyValue": 1400, "maxCappers": 1, "productionDelaySeconds": 10, "reinforce": false, "micro": false, "buildDefenses": false },
-    { "id": "normal", "name": "Veteran",  "thinkIntervalSeconds": 2.0, "retreatHealthFraction": 0.30, "attackStrengthRatio": 1.2, "firstAttackArmyValue": 1000, "maxCappers": 2, "productionDelaySeconds": 3,  "reinforce": true,  "micro": true,  "buildDefenses": true },
+    { "id": "normal", "name": "Veteran",  "thinkIntervalSeconds": 2.5, "retreatHealthFraction": 0.25, "attackStrengthRatio": 1.35, "firstAttackArmyValue": 1100, "maxCappers": 2, "productionDelaySeconds": 7,  "reinforce": true,  "micro": true,  "buildDefenses": true },
     { "id": "hard",   "name": "Elite",    "thinkIntervalSeconds": 1.0, "retreatHealthFraction": 0.35, "attackStrengthRatio": 1.0, "firstAttackArmyValue": 800,  "maxCappers": 3, "productionDelaySeconds": 0,  "reinforce": true,  "micro": true,  "buildDefenses": true }
   ],
   "factions": [

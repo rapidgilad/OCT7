@@ -26,12 +26,8 @@ jobs:
       - name: Unit tests
         run: dotnet test tests/OCT7.Sim.Tests -c Release
 
-      - name: AI-vs-AI determinism (all matchups)
-        run: |
-          for m in "idf hamas" "idf hezbollah" "hamas hezbollah"; do
-            set -- $m
-            dotnet run --project tools/MatchRunner -c Release -- --matches 10 --ticks 6000 --p0 $1 --p1 $2 --verify-determinism
-          done
+      - name: Full AI-vs-AI skirmishes, all matchups (finish + determinism)
+        run: dotnet run --project tools/MatchRunner -c Release -- --all-matchups --matches 2 --verify-determinism
 
   godot:
     name: Godot build + headless smoke test

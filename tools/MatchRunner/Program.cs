@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using OCT7.Sim;
 using OCT7.Sim.AI;
 using OCT7.Sim.Data;
@@ -12,11 +13,17 @@ using OCT7.Sim.Match;
 namespace OCT7.Tools.MatchRunner
 {
     /// <summary>
-    /// Headless AI-vs-AI batch runner — the automated playtester (docs/04-ai-and-difficulty.md §4).
-    /// Example: dotnet run --project tools/MatchRunner -- --matches 20 --ticks 6000 --p0 idf --p1 hamas --verify-determinism
+    /// Headless AI-vs-AI skirmish runner — the automated playtester (docs/04-ai-and-difficulty.md §4).
+    /// Plays full matches on the default skirmish map until victory (or the time limit) and reports
+    /// win rates, match length, stalls and determinism.
+    /// Examples:
+    ///   dotnet run --project tools/MatchRunner -- --matches 10 --p0 idf --p1 hamas --d0 normal --d1 normal --verify-determinism
+    ///   dotnet run --project tools/MatchRunner -- --all-matchups --matches 4 --d0 hard --d1 easy
     /// </summary>
     public static class Program
     {
+        private static readonly string[] Factions = { "idf", "hamas", "hezbollah" };
+
         public static int Main(string[] args)
         {
             Options options;
@@ -46,108 +53,137 @@ namespace OCT7.Tools.MatchRunner
                 return 1;
             }
 
-            var results = new List<MatchResult>();
+            var matchups = options.AllMatchups
+                ? (from a in Factions from b in Factions select (a, b)).ToList()
+                : new List<(string, string)> { (options.Faction0, options.Faction1) };
+
+            var reports = new List<object>();
+            bool ok = true;
             var total = Stopwatch.StartNew();
-            for (int m = 0; m < options.Matches; m++)
+            foreach (var (f0, f1) in matchups)
             {
-                ulong seed = options.Seed + (ulong)m;
-                var result = RunMatch(data, options, seed);
-                if (options.VerifyDeterminism)
+                var results = new List<MatchResult>();
+                for (int m = 0; m < options.Matches; m++)
                 {
-                    var replay = RunMatch(data, options, seed);
-                    result.Deterministic = replay.FinalHash == result.FinalHash;
+                    ulong seed = options.Seed + (ulong)m;
+                    var result = RunMatch(data, options, f0, f1, seed);
+                    if (options.VerifyDeterminism)
+                    {
+                        result.Deterministic = RunMatch(data, options, f0, f1, seed).FinalHash == result.FinalHash;
+                    }
+
+                    results.Add(result);
                 }
 
-                results.Add(result);
+                bool determinismOk = results.All(r => r.Deterministic != false);
+                bool noErrors = results.All(r => r.Error == null);
+                ok &= determinismOk && noErrors;
+                int finished = results.Count(r => r.Finished);
+                reports.Add(new
+                {
+                    matchup = $"{f0} ({options.Difficulty0}) vs {f1} ({options.Difficulty1})",
+                    matches = results.Count,
+                    finishedPercent = Math.Round(100.0 * finished / results.Count, 1),
+                    p0WinPercent = Math.Round(100.0 * results.Count(r => r.Winner == 0) / results.Count, 1),
+                    p1WinPercent = Math.Round(100.0 * results.Count(r => r.Winner == 1) / results.Count, 1),
+                    averageMinutes = Math.Round(results.Average(r => r.Minutes), 1),
+                    averageSquadsLost = Math.Round(results.Average(r => r.SquadsLost), 1),
+                    averageStructuresBuilt = Math.Round(results.Average(r => r.StructuresBuilt), 1),
+                    determinism = options.VerifyDeterminism ? (determinismOk ? "ok" : "FAILED") : "not checked",
+                    errors = noErrors ? null : results.Where(r => r.Error != null).Select(r => $"seed {r.Seed}: {r.Error}").ToArray(),
+                    averageMsPerMatch = Math.Round(results.Average(r => r.WallClockMs), 0),
+                    results = options.Verbose ? results : null,
+                });
             }
 
             total.Stop();
-            bool determinismOk = results.All(r => r.Deterministic != false);
-            var summary = new
-            {
-                matchup = $"{options.Faction0} vs {options.Faction1}",
-                matches = results.Count,
-                ticksPerMatch = options.Ticks,
-                simulatedMinutesPerMatch = options.Ticks / (double)SimConfig.TicksPerMinute,
-                determinism = options.VerifyDeterminism ? (determinismOk ? "ok" : "FAILED") : "not checked",
-                wallClockSeconds = Math.Round(total.Elapsed.TotalSeconds, 2),
-                averageMsPerMatch = Math.Round(results.Average(r => r.WallClockMs), 1),
-                speedupVsRealTime = Math.Round(results.Sum(r => options.Ticks * SimConfig.TickSeconds * 1000.0) / Math.Max(1.0, results.Sum(r => r.WallClockMs)), 1),
-                averageFinalDistanceBetweenForces = Math.Round(results.Average(r => r.FinalForceDistance), 1),
-                results = options.Verbose ? results : null,
-            };
-
-            Console.WriteLine(JsonSerializer.Serialize(summary, new JsonSerializerOptions
+            Console.WriteLine(JsonSerializer.Serialize(new { wallClockSeconds = Math.Round(total.Elapsed.TotalSeconds, 1), reports }, new JsonSerializerOptions
             {
                 WriteIndented = true,
-                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             }));
 
-            return determinismOk ? 0 : 1;
+            return ok ? 0 : 1;
         }
 
-        private static MatchResult RunMatch(GameDataSet data, Options options, ulong seed)
+        private static MatchResult RunMatch(GameDataSet data, Options options, string f0, string f1, ulong seed)
         {
             var watch = Stopwatch.StartNew();
-            var sim = MatchSetup.CreateSandboxMatch(data, options.Faction0, options.Faction1, seed);
-            var ais = new List<IAiController> { new AdvanceAi(0, seed), new AdvanceAi(1, seed) };
-            var buffer = new List<Command>();
-            for (int t = 0; t < options.Ticks; t++)
+            var result = new MatchResult { Seed = seed };
+            try
             {
-                SimLoop.Step(sim, ais, buffer);
+                var sim = MatchSetup.CreateSkirmish(data, f0, f1, seed, options.MapId);
+                var ais = new List<IAiController>
+                {
+                    SkirmishAi.Create(sim, 0, options.Difficulty0),
+                    SkirmishAi.Create(sim, 1, options.Difficulty1),
+                };
+                var buffer = new List<Command>();
+                int maxTicks = (int)(options.MaxMinutes * SimConfig.TicksPerMinute);
+                while (!sim.IsOver && sim.Tick < maxTicks)
+                {
+                    SimLoop.Step(sim, ais, buffer);
+                    foreach (var e in sim.Events)
+                    {
+                        if (e.Type == SimEventType.SquadDestroyed)
+                        {
+                            result.SquadsLost++;
+                        }
+                        else if (e.Type == SimEventType.StructureCompleted)
+                        {
+                            result.StructuresBuilt++;
+                        }
+                    }
+                }
+
+                result.Finished = sim.IsOver;
+                result.Winner = sim.IsOver ? sim.WinnerId : -1;
+                result.Minutes = Math.Round(sim.ElapsedSeconds / 60.0, 1);
+                result.Tickets = sim.Players.Select(p => Math.Round(p.Tickets, 0)).ToArray();
+                result.FinalHash = sim.ComputeStateHash().ToString("x16", CultureInfo.InvariantCulture);
+            }
+            catch (Exception ex)
+            {
+                result.Error = ex.GetType().Name + ": " + ex.Message + " @ " + ex.StackTrace?.Split('\n').FirstOrDefault()?.Trim();
             }
 
             watch.Stop();
-            return new MatchResult
-            {
-                Seed = seed,
-                FinalHash = sim.ComputeStateHash().ToString("x16", CultureInfo.InvariantCulture),
-                WallClockMs = watch.Elapsed.TotalMilliseconds,
-                CommandsExecuted = sim.ExecutedCommandCount,
-                FinalForceDistance = Vec2.Distance(Centroid(sim, 0), Centroid(sim, 1)),
-                Manpower = sim.Players.Select(p => Math.Round(p.Manpower, 1)).ToArray(),
-            };
-        }
-
-        private static Vec2 Centroid(Simulation sim, int playerId)
-        {
-            var sum = Vec2.Zero;
-            int count = 0;
-            foreach (var s in sim.World.Squads)
-            {
-                if (s.OwnerId == playerId)
-                {
-                    sum += s.Position;
-                    count++;
-                }
-            }
-
-            return count > 0 ? sum / count : Vec2.Zero;
+            result.WallClockMs = watch.Elapsed.TotalMilliseconds;
+            return result;
         }
 
         private sealed class MatchResult
         {
             public ulong Seed { get; set; }
+            public bool Finished { get; set; }
+            public int Winner { get; set; } = -1;
+            public double Minutes { get; set; }
+            public double[] Tickets { get; set; }
+            public int SquadsLost { get; set; }
+            public int StructuresBuilt { get; set; }
             public string FinalHash { get; set; }
             public bool? Deterministic { get; set; }
+            public string Error { get; set; }
             public double WallClockMs { get; set; }
-            public int CommandsExecuted { get; set; }
-            public float FinalForceDistance { get; set; }
-            public double[] Manpower { get; set; }
         }
 
         private sealed class Options
         {
             public const string Usage =
-                "Usage: MatchRunner [--matches N] [--ticks T] [--seed S] [--p0 FACTION] [--p1 FACTION]\n" +
-                "                   [--verify-determinism] [--verbose] [--data DIR]\n" +
-                "Factions: idf | hamas | hezbollah. Defaults: 10 matches, 6000 ticks (10 min), seed 1, idf vs hamas.";
+                "Usage: MatchRunner [--matches N] [--seed S] [--p0 FACTION] [--p1 FACTION] [--d0 DIFF] [--d1 DIFF]\n" +
+                "                   [--all-matchups] [--max-minutes M] [--map ID] [--verify-determinism] [--verbose] [--data DIR]\n" +
+                "Factions: idf | hamas | hezbollah. Difficulties: easy | normal | hard.\n" +
+                "Defaults: 4 matches, seed 1, idf vs hamas, normal vs normal, 45 minute limit.";
 
-            public int Matches { get; private set; } = 10;
-            public int Ticks { get; private set; } = 6000;
+            public int Matches { get; private set; } = 4;
             public ulong Seed { get; private set; } = 1;
             public string Faction0 { get; private set; } = "idf";
             public string Faction1 { get; private set; } = "hamas";
+            public string Difficulty0 { get; private set; } = "normal";
+            public string Difficulty1 { get; private set; } = "normal";
+            public bool AllMatchups { get; private set; }
+            public double MaxMinutes { get; private set; } = 45;
+            public string MapId { get; private set; }
             public bool VerifyDeterminism { get; private set; }
             public bool Verbose { get; private set; }
             public bool ShowHelp { get; private set; }
@@ -162,10 +198,14 @@ namespace OCT7.Tools.MatchRunner
                     switch (args[i])
                     {
                         case "--matches": o.Matches = int.Parse(Next(), CultureInfo.InvariantCulture); break;
-                        case "--ticks": o.Ticks = int.Parse(Next(), CultureInfo.InvariantCulture); break;
                         case "--seed": o.Seed = ulong.Parse(Next(), CultureInfo.InvariantCulture); break;
                         case "--p0": o.Faction0 = Next(); break;
                         case "--p1": o.Faction1 = Next(); break;
+                        case "--d0": o.Difficulty0 = Next(); break;
+                        case "--d1": o.Difficulty1 = Next(); break;
+                        case "--all-matchups": o.AllMatchups = true; break;
+                        case "--max-minutes": o.MaxMinutes = double.Parse(Next(), CultureInfo.InvariantCulture); break;
+                        case "--map": o.MapId = Next(); break;
                         case "--data": o.DataDirectory = Next(); break;
                         case "--verify-determinism": o.VerifyDeterminism = true; break;
                         case "--verbose": o.Verbose = true; break;
@@ -175,9 +215,9 @@ namespace OCT7.Tools.MatchRunner
                     }
                 }
 
-                if (o.Matches < 1 || o.Ticks < 1)
+                if (o.Matches < 1 || o.MaxMinutes <= 0)
                 {
-                    throw new ArgumentException("--matches and --ticks must be >= 1");
+                    throw new ArgumentException("--matches must be >= 1 and --max-minutes > 0");
                 }
 
                 return o;
