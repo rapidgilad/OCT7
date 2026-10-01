@@ -47,6 +47,13 @@ namespace OCT7.Game.Input
             UpdateTransform();
         }
 
+        /// <summary>Centers the view on a ground point, keeping zoom and rotation (minimap jumps).</summary>
+        public void FocusOn(Vector3 point)
+        {
+            _focus = new Vector3(Mathf.Clamp(point.X, 0f, _boundsX), 0f, Mathf.Clamp(point.Z, 0f, _boundsZ));
+            UpdateTransform();
+        }
+
         public override void _Process(double delta)
         {
             float dt = (float)delta;

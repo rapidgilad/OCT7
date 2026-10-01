@@ -1,24 +1,42 @@
 using System.Globalization;
 using Godot;
+using OCT7.Game.Match;
 
 namespace OCT7.Game
 {
     /// <summary>
     /// Command-line options passed after "--", e.g.
+    ///   godot --path game -- --quick --p0 hezbollah --difficulty hard
     ///   godot --path game -- --demo --overview --screenshot /tmp/shot.png
     ///   godot --headless --path game -- --smoke-test 600
+    ///   godot --headless --path game -- --smoke-test 30000 --full-match
+    /// Any option that only makes sense in a match skips the main menu.
     /// </summary>
     public sealed class LaunchOptions
     {
         public ulong Seed { get; private set; } = 1;
         public string Faction0 { get; private set; } = "idf";
         public string Faction1 { get; private set; } = "hamas";
+        public string Difficulty { get; private set; } = "normal";
+        public string MapId { get; private set; }
+
+        /// <summary>Skip the main menu and start a skirmish with the given (or default) settings.</summary>
+        public bool Quick { get; private set; }
 
         /// <summary>Run N ticks headless with AI on both sides, print the state hash, quit.</summary>
         public int SmokeTestTicks { get; private set; }
 
-        /// <summary>Let AI control the local player too (attract/demo mode).</summary>
+        /// <summary>
+        /// Play until the match is decided. With --smoke-test, N becomes the tick cap and the run fails if no side won;
+        /// in a windowed run the match is fast-forwarded to its end so the end screen shows.
+        /// </summary>
+        public bool FullMatch { get; private set; }
+
+        /// <summary>Let AI control the local player too (attract/demo mode). Fog is off unless --fog is given.</summary>
         public bool Demo { get; private set; }
+
+        /// <summary>Keep the local player's fog of war in demo mode.</summary>
+        public bool Fog { get; private set; }
 
         /// <summary>Simulate N ticks before the first frame (useful for screenshots mid-match).</summary>
         public int FastForwardTicks { get; private set; }
@@ -32,8 +50,14 @@ namespace OCT7.Game
         /// <summary>Select all local squads on start (shows selection visuals in screenshots).</summary>
         public bool SelectAllOnStart { get; private set; }
 
+        /// <summary>Show the main menu even when other options would skip it (menu screenshots).</summary>
+        public bool ForceMenu { get; private set; }
+
         public string ScreenshotPath { get; private set; }
         public int ScreenshotAfterFrames { get; private set; } = 60;
+
+        public bool SkipMenu => !ForceMenu && (
+            Quick || Demo || FullMatch || SmokeTestTicks > 0 || FastForwardTicks > 0 || !string.IsNullOrEmpty(ScreenshotPath));
 
         public static LaunchOptions Parse(string[] args)
         {
@@ -43,11 +67,17 @@ namespace OCT7.Game
                 string Next() => i + 1 < args.Length ? args[++i] : string.Empty;
                 switch (args[i])
                 {
-                    case "--seed": o.Seed = ulong.Parse(Next(), CultureInfo.InvariantCulture); break;
-                    case "--p0": o.Faction0 = Next(); break;
-                    case "--p1": o.Faction1 = Next(); break;
+                    case "--seed": o.Seed = ulong.Parse(Next(), CultureInfo.InvariantCulture); o.Quick = true; break;
+                    case "--p0": o.Faction0 = Next(); o.Quick = true; break;
+                    case "--p1": o.Faction1 = Next(); o.Quick = true; break;
+                    case "--difficulty": o.Difficulty = Next(); o.Quick = true; break;
+                    case "--map": o.MapId = Next(); o.Quick = true; break;
+                    case "--quick": o.Quick = true; break;
+                    case "--menu": o.ForceMenu = true; break;
                     case "--smoke-test": o.SmokeTestTicks = int.Parse(Next(), CultureInfo.InvariantCulture); break;
+                    case "--full-match": o.FullMatch = true; break;
                     case "--demo": o.Demo = true; break;
+                    case "--fog": o.Fog = true; break;
                     case "--fast-forward": o.FastForwardTicks = int.Parse(Next(), CultureInfo.InvariantCulture); break;
                     case "--overview": o.Overview = true; break;
                     case "--focus-army": o.FocusArmy = true; break;
@@ -59,6 +89,17 @@ namespace OCT7.Game
             }
 
             return o;
+        }
+
+        /// <summary>Copies the match setup into <see cref="MatchSettings"/> for the match scene.</summary>
+        public void ApplyTo()
+        {
+            MatchSettings.PlayerFaction = Faction0;
+            MatchSettings.EnemyFaction = Faction1;
+            MatchSettings.Difficulty = Difficulty;
+            MatchSettings.Seed = Seed;
+            MatchSettings.MapId = MapId;
+            MatchSettings.Demo = Demo;
         }
     }
 }

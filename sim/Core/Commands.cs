@@ -351,4 +351,26 @@ namespace OCT7.Sim
             }
         }
     }
+
+    /// <summary>The issuing player concedes; the match ends at the victory check of the same tick.</summary>
+    public sealed class SurrenderCommand : Command
+    {
+        public SurrenderCommand()
+        {
+        }
+
+        public SurrenderCommand(int playerId)
+        {
+            PlayerId = playerId;
+        }
+
+        public override void Apply(Simulation sim)
+        {
+            var player = sim.GetPlayer(PlayerId);
+            if (player != null && !sim.IsOver)
+            {
+                player.IsDefeated = true;
+            }
+        }
+    }
 }

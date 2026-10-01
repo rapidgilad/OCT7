@@ -135,6 +135,18 @@ namespace OCT7.Sim.Tests
             Assert.True(sim.IsOver);
             Assert.Equal(0, sim.WinnerId);
         }
+
+        [Fact]
+        public void Surrender_EndsTheMatch_ForTheOtherPlayer()
+        {
+            var sim = Skirmish();
+            sim.Enqueue(new SurrenderCommand(0));
+            sim.Step();
+            Assert.True(sim.IsOver);
+            Assert.Equal(1, sim.WinnerId);
+            Assert.True(sim.Players[0].IsDefeated);
+            Assert.True(sim.Players[0].Tickets > 0);
+        }
     }
 
     public class ProductionTests
