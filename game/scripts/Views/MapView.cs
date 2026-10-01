@@ -14,10 +14,12 @@ namespace OCT7.Game.Views
     public partial class MapView : Node3D
     {
         private const int PixelsPerCell = 4;
-        private static readonly Color Sand = new Color(0.76f, 0.69f, 0.53f);
-        private static readonly Color Rock = new Color(0.58f, 0.55f, 0.50f);
-        private static readonly Color Farmland = new Color(0.50f, 0.55f, 0.34f);
-        private static readonly Color Track = new Color(0.62f, 0.54f, 0.41f);
+        private static readonly Color Sand = new Color(0.62f, 0.55f, 0.41f);
+        private static readonly Color DryGrass = new Color(0.50f, 0.49f, 0.32f);
+        private static readonly Color DarkEarth = new Color(0.47f, 0.40f, 0.30f);
+        private static readonly Color Rock = new Color(0.50f, 0.48f, 0.44f);
+        private static readonly Color Farmland = new Color(0.40f, 0.45f, 0.26f);
+        private static readonly Color Track = new Color(0.55f, 0.46f, 0.34f);
 
         public ImageTexture GroundTexture { get; private set; }
 
@@ -44,7 +46,7 @@ namespace OCT7.Game.Views
             {
                 Name = "OuterGround",
                 Mesh = new PlaneMesh { Size = new Vector2(grid.WorldWidth * 5f, grid.WorldHeight * 5f) },
-                MaterialOverride = MeshKit.Mat(new Color(0.55f, 0.5f, 0.4f), 1f),
+                MaterialOverride = MeshKit.Mat(new Color(0.40f, 0.36f, 0.28f), 1f),
                 Position = new Vector3(grid.WorldWidth * 0.5f, -0.06f, grid.WorldHeight * 0.5f),
                 CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
             });
@@ -56,7 +58,8 @@ namespace OCT7.Game.Views
             int w = grid.Width * PixelsPerCell;
             int h = grid.Height * PixelsPerCell;
             var bytes = new byte[w * h * 3];
-            var trackMask = BuildTrackMask(map);
+            var tracks = BuildTrackSegments(map);
+            float metersPerPixel = grid.CellSize / PixelsPerCell;
             for (int py = 0; py < h; py++)
             {
                 for (int px = 0; px < w; px++)
@@ -64,12 +67,26 @@ namespace OCT7.Game.Views
                     int cx = px / PixelsPerCell, cy = py / PixelsPerCell;
                     var ground = grid.GetGround(new GridPos(cx, cy));
                     var c = ground == GroundType.Rock ? Rock : ground == GroundType.MudFarmland ? Farmland : Sand;
-                    if (trackMask[cy * grid.Width + cx])
+
+                    // Large soft patches of dry grass and darker earth break up the flat sand.
+                    float patches = ValueNoise(px / 46f, py / 46f, 7);
+                    float earth = ValueNoise(px / 23f, py / 23f, 31);
+                    if (ground == GroundType.SandUrban)
                     {
-                        c = c.Lerp(Track, 0.7f);
+                        c = c.Lerp(DryGrass, Mathf.SmoothStep(0.5f, 0.85f, patches) * 0.85f);
+                        c = c.Lerp(DarkEarth, Mathf.SmoothStep(0.55f, 0.9f, earth) * 0.6f);
                     }
 
-                    float n = (MeshKit.Hash01(px / 2, py / 2) - 0.5f) * 0.07f + (MeshKit.Hash01(px / 9, py / 9 + 999) - 0.5f) * 0.06f;
+                    // Dirt tracks: distance to the nearest track segment, with a noisy soft edge.
+                    var world = new Vec2((px + 0.5f) * metersPerPixel, (py + 0.5f) * metersPerPixel);
+                    float d = DistanceToTracks(world, tracks) + (ValueNoise(px / 5f, py / 5f, 17) - 0.5f) * 1.2f;
+                    float track = 1f - Mathf.SmoothStep(1.4f, 2.6f, d);
+                    if (track > 0f)
+                    {
+                        c = c.Lerp(Track, 0.75f * track);
+                    }
+
+                    float n = (MeshKit.Hash01(px, py) - 0.5f) * 0.045f + (ValueNoise(px / 7f, py / 7f, 3) - 0.5f) * 0.07f;
                     int i = (py * w + px) * 3;
                     bytes[i] = (byte)(Mathf.Clamp(c.R + n, 0f, 1f) * 255f);
                     bytes[i + 1] = (byte)(Mathf.Clamp(c.G + n, 0f, 1f) * 255f);
@@ -90,11 +107,24 @@ namespace OCT7.Game.Views
             });
         }
 
-        /// <summary>Dirt tracks from each HQ to the victory points and between neighbouring capture points.</summary>
-        private static bool[] BuildTrackMask(MapDefinition map)
+        /// <summary>Smooth value noise in [0, 1]: bilinear interpolation of lattice hashes with smoothstep weights.</summary>
+        private static float ValueNoise(float x, float y, int seed)
         {
-            var grid = map.Grid;
-            var mask = new bool[grid.Width * grid.Height];
+            int x0 = Mathf.FloorToInt(x), y0 = Mathf.FloorToInt(y);
+            float fx = x - x0, fy = y - y0;
+            fx = fx * fx * (3f - 2f * fx);
+            fy = fy * fy * (3f - 2f * fy);
+            float a = MeshKit.Hash01(x0 + seed * 1013, y0);
+            float b = MeshKit.Hash01(x0 + 1 + seed * 1013, y0);
+            float c = MeshKit.Hash01(x0 + seed * 1013, y0 + 1);
+            float d = MeshKit.Hash01(x0 + 1 + seed * 1013, y0 + 1);
+            return Mathf.Lerp(Mathf.Lerp(a, b, fx), Mathf.Lerp(c, d, fx), fy);
+        }
+
+        /// <summary>Dirt tracks between each capture point and its two nearest neighbours (world-space segments).</summary>
+        private static List<(Vec2 a, Vec2 b)> BuildTrackSegments(MapDefinition map)
+        {
+            var segments = new List<(Vec2, Vec2)>();
             var points = new List<Vec2>();
             foreach (var s in map.Sectors)
             {
@@ -103,7 +133,6 @@ namespace OCT7.Game.Views
 
             for (int i = 0; i < points.Count; i++)
             {
-                // connect each point to its two nearest neighbours
                 int best1 = -1, best2 = -1;
                 float d1 = float.MaxValue, d2 = float.MaxValue;
                 for (int j = 0; j < points.Count; j++)
@@ -128,33 +157,30 @@ namespace OCT7.Game.Views
                     }
                 }
 
-                if (best1 >= 0) Paint(mask, grid, points[i], points[best1]);
-                if (best2 >= 0) Paint(mask, grid, points[i], points[best2]);
+                if (best1 >= 0) segments.Add((points[i], points[best1]));
+                if (best2 >= 0) segments.Add((points[i], points[best2]));
             }
 
-            return mask;
+            return segments;
         }
 
-        private static void Paint(bool[] mask, MapGrid grid, Vec2 a, Vec2 b)
+        private static float DistanceToTracks(Vec2 p, List<(Vec2 a, Vec2 b)> segments)
         {
-            float len = Vec2.Distance(a, b);
-            int steps = (int)(len / (grid.CellSize * 0.5f));
-            for (int s = 0; s <= steps; s++)
+            float best = float.MaxValue;
+            foreach (var (a, b) in segments)
             {
-                var p = Vec2.Lerp(a, b, s / (float)Mathf.Max(1, steps));
-                var c = grid.WorldToCell(p);
-                for (int dy = 0; dy <= 1; dy++)
+                var ab = b - a;
+                float len2 = ab.X * ab.X + ab.Y * ab.Y;
+                float t = len2 > 0f ? Mathf.Clamp(((p.X - a.X) * ab.X + (p.Y - a.Y) * ab.Y) / len2, 0f, 1f) : 0f;
+                float dx = a.X + ab.X * t - p.X, dy = a.Y + ab.Y * t - p.Y;
+                float d2 = dx * dx + dy * dy;
+                if (d2 < best)
                 {
-                    for (int dx = 0; dx <= 1; dx++)
-                    {
-                        var cell = new GridPos(c.X + dx, c.Y + dy);
-                        if (grid.IsWalkable(cell))
-                        {
-                            mask[grid.ToIndex(cell)] = true;
-                        }
-                    }
+                    best = d2;
                 }
             }
+
+            return Mathf.Sqrt(best);
         }
 
         private void ScatterProps(MapDefinition map)

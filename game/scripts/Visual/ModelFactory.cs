@@ -52,7 +52,7 @@ namespace OCT7.Game.Visual
         public static SoldierRig BuildSoldier(UnitDef unit, WeaponKind kind, Color team, int index, bool carriesSpecialWeapon)
         {
             string faction = unit.FactionId;
-            var rig = new SoldierRig { Root = new Node3D { Scale = Vector3.One * 1.12f } };
+            var rig = new SoldierRig { Root = new Node3D { Scale = Vector3.One * 1.3f } };
             rig.Pose = new Node3D();
             rig.Root.AddChild(rig.Pose);
 
@@ -108,17 +108,17 @@ namespace OCT7.Game.Visual
             if (helmet)
             {
                 MeshKit.Sphere(ub, 0.15f, new Vector3(0f, 0.74f, 0f), headgear, true, 8);
-                MeshKit.Cyl(ub, 0.152f, 0.152f, 0.04f, new Vector3(0f, 0.755f, 0f), team, null, 10);
+                MeshKit.Cyl(ub, 0.152f, 0.152f, 0.04f, new Vector3(0f, 0.755f, 0f), headgear.Darkened(0.35f), null, 10);
             }
             else if (cap)
             {
                 MeshKit.Cyl(ub, 0.13f, 0.135f, 0.09f, new Vector3(0f, 0.81f, 0f), headgear, null, 8);
                 MeshKit.Box(ub, new Vector3(0.18f, 0.02f, 0.12f), new Vector3(0f, 0.775f, 0.12f), headgear);
-                MeshKit.Cyl(ub, 0.128f, 0.128f, 0.03f, new Vector3(0f, 0.775f, 0f), team, null, 10);
+                MeshKit.Cyl(ub, 0.128f, 0.128f, 0.03f, new Vector3(0f, 0.775f, 0f), headgear.Darkened(0.35f), null, 10);
             }
             else
             {
-                MeshKit.Cyl(ub, 0.125f, 0.125f, 0.04f, new Vector3(0f, 0.77f, 0f), team, null, 10); // headband
+                MeshKit.Cyl(ub, 0.125f, 0.125f, 0.04f, new Vector3(0f, 0.77f, 0f), new Color(0.22f, 0.27f, 0.14f), null, 10); // headband
             }
 
             // Arms hold the weapon forward (pivot at the shoulder).
@@ -145,7 +145,7 @@ namespace OCT7.Game.Visual
             MeshKit.Box(pivot, new Vector3(0.11f, 0.5f, 0.12f), new Vector3(0f, -0.22f, 0f), sleeve);
             if (armband)
             {
-                MeshKit.Box(pivot, new Vector3(0.13f, 0.08f, 0.14f), new Vector3(0f, -0.1f, 0f), team);
+                MeshKit.Box(pivot, new Vector3(0.14f, 0.11f, 0.15f), new Vector3(0f, -0.1f, 0f), team);
             }
 
             return pivot;
@@ -597,7 +597,7 @@ namespace OCT7.Game.Visual
 
         private static void Rock(Node3D root, float w, float h, float d, int index)
         {
-            var color = MeshKit.Vary(new Color(0.55f, 0.52f, 0.47f), 0.08f, index);
+            var color = MeshKit.Vary(new Color(0.44f, 0.41f, 0.37f), 0.08f, index);
             for (int i = 0; i < 4; i++)
             {
                 float ox = (MeshKit.Hash01(index, i * 3) - 0.5f) * w * 0.5f;

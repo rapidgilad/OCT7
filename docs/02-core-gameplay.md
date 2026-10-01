@@ -37,6 +37,7 @@ All numbers are **initial tuning values**. Balance changes are made through data
 - **Win conditions:**
   - **Default:** tickets reach 0, or the enemy HQ is destroyed.
   - **Optional:** Annihilation (all enemy units and production destroyed).
+  - **Surrender:** a player can concede from the pause menu. It is a normal command (`SurrenderCommand`), so it replays deterministically.
 
 ## 3. Combat Model
 CoH-style probabilistic combat, resolved by a deterministic simulation at a **fixed 8–10 Hz tick**.
@@ -63,6 +64,14 @@ HitChance = WeaponAccuracy(range band)
 | **Rubble — Hamas trait** | 0.45 | Hamas squads also gain camo 2 while stationary in rubble |
 
 Cover comes from **cover nodes** generated from tagged props. When a squad is given a move order, the destination shows a green/yellow/red preview.
+
+**As implemented in v0.1** (`sim/World/CoverGrid.cs`):
+- Cover comes from two sources:
+  - **Automatic:** walkable cells next to a building or rock give **heavy** cover; cells next to a low wall or fence give **light** cover.
+  - **Placed:** engineers of every faction build **sandbags**. These are a shared structure that adds heavy cover cells, and infantry and vehicles can move through them.
+- Cover is **directional**. Each cover cell stores a normal pointing at its obstacle, and the bonus applies only when the shooter is on the far side (dot product > 0.2). Flanking a squad in cover strips the bonus.
+- Move orders **snap** to the best cover cell within a few meters of the click. The preview at the cursor shows heavy (green), light (yellow) or open (red).
+- Garrisons, rubble and negative cover are still to come (post-v0.1).
 
 ### Suppression
 - Each squad has a suppression meter (0–100). MGs, explosions and sustained fire fill it; it decays over time.

@@ -247,7 +247,9 @@ namespace OCT7.Game.Vfx
 
         public override void _Process(double delta)
         {
-            float dt = (float)delta;
+            // Clamp the step so short effects (flashes, tracers) are drawn for at least a couple of frames even when
+            // the frame rate drops (software rendering, hitches); they then simply last a little longer in real time.
+            float dt = Mathf.Min((float)delta, 1f / 30f);
             _time += dt;
             for (int i = _active.Count - 1; i >= 0; i--)
             {

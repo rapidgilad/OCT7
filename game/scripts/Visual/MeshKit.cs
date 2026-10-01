@@ -72,6 +72,45 @@ namespace OCT7.Game.Visual
         public static Mesh CylMesh(float top, float bottom, float h, int seg) =>
             Cached($"cyl{top:0.000}{bottom:0.000}{h:0.000}{seg}", () => new CylinderMesh { TopRadius = top, BottomRadius = bottom, Height = h, RadialSegments = seg, Rings = 1 });
 
+        /// <summary>Flat annulus in the XZ plane (selection rings, capture radius), facing up.</summary>
+        public static Mesh RingMesh(float radius, float width, int seg) =>
+            Cached($"ring{radius:0.000}{width:0.000}{seg}", () =>
+            {
+                var verts = new Vector3[(seg + 1) * 2];
+                var normals = new Vector3[verts.Length];
+                var indices = new int[seg * 6];
+                float inner = Mathf.Max(0f, radius - width);
+                for (int i = 0; i <= seg; i++)
+                {
+                    float a = Mathf.Tau * i / seg;
+                    var dir = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+                    verts[i * 2] = dir * inner;
+                    verts[i * 2 + 1] = dir * radius;
+                    normals[i * 2] = Vector3.Up;
+                    normals[i * 2 + 1] = Vector3.Up;
+                }
+
+                for (int i = 0; i < seg; i++)
+                {
+                    int k = i * 6, v = i * 2;
+                    indices[k] = v;
+                    indices[k + 1] = v + 1;
+                    indices[k + 2] = v + 2;
+                    indices[k + 3] = v + 1;
+                    indices[k + 4] = v + 3;
+                    indices[k + 5] = v + 2;
+                }
+
+                var arrays = new Godot.Collections.Array();
+                arrays.Resize((int)Mesh.ArrayType.Max);
+                arrays[(int)Mesh.ArrayType.Vertex] = verts;
+                arrays[(int)Mesh.ArrayType.Normal] = normals;
+                arrays[(int)Mesh.ArrayType.Index] = indices;
+                var mesh = new ArrayMesh();
+                mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
+                return mesh;
+            });
+
         public static Mesh SphereMesh(float r, int seg, bool hemi) =>
             Cached($"sph{r:0.000}{seg}{hemi}", () => new SphereMesh { Radius = r, Height = hemi ? r : r * 2f, RadialSegments = seg, Rings = System.Math.Max(2, seg / 2), IsHemisphere = hemi });
 

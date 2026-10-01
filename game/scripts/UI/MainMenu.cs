@@ -36,7 +36,7 @@ namespace OCT7.Game.UI
             }
 
             Theme = UiTheme.Create();
-            SetAnchorsPreset(LayoutPreset.FullRect);
+            SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
             AddChild(new ColorRect { Color = new Color(0.09f, 0.1f, 0.08f), AnchorRight = 1f, AnchorBottom = 1f, MouseFilter = MouseFilterEnum.Ignore });
             AddChild(new ColorRect { Color = new Color(0.62f, 0.55f, 0.38f, 0.08f), AnchorRight = 1f, AnchorTop = 0.62f, AnchorBottom = 1f, MouseFilter = MouseFilterEnum.Ignore });
 

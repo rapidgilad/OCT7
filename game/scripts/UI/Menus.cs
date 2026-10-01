@@ -13,7 +13,7 @@ namespace OCT7.Game.UI
         public override void _Ready()
         {
             Theme = UiTheme.Create();
-            SetAnchorsPreset(LayoutPreset.FullRect);
+            SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
             MouseFilter = MouseFilterEnum.Stop;
             AddChild(new ColorRect { Color = new Color(0f, 0f, 0f, 0.55f), MouseFilter = MouseFilterEnum.Ignore, AnchorRight = 1f, AnchorBottom = 1f });
             var center = new CenterContainer { AnchorRight = 1f, AnchorBottom = 1f };
@@ -68,7 +68,7 @@ namespace OCT7.Game.UI
         {
             _match = match;
             Theme = UiTheme.Create();
-            SetAnchorsPreset(LayoutPreset.FullRect);
+            SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
             MouseFilter = MouseFilterEnum.Stop;
             AddChild(new ColorRect { Color = new Color(0f, 0f, 0f, 0.45f), MouseFilter = MouseFilterEnum.Ignore, AnchorRight = 1f, AnchorBottom = 1f });
             var center = new CenterContainer { AnchorRight = 1f, AnchorBottom = 1f };

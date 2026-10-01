@@ -19,7 +19,7 @@ namespace OCT7.Game.UI
         public void Initialize(MatchController match)
         {
             _match = match;
-            SetAnchorsPreset(LayoutPreset.FullRect);
+            SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
             MouseFilter = MouseFilterEnum.Ignore;
         }
 

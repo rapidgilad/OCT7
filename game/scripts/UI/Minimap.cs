@@ -15,6 +15,10 @@ namespace OCT7.Game.UI
         private MatchController _match;
         private Texture2D _ground;
         private bool _dragging;
+        private Image _fogImage;
+        private ImageTexture _fogTexture;
+        private byte[] _fogBytes;
+        private int _fogTick = -1;
 
         public void Initialize(MatchController match, Texture2D groundTexture)
         {
@@ -60,21 +64,11 @@ namespace OCT7.Game.UI
                 DrawRect(new Rect2(o.MinX * sx, o.MinY * sy, (o.MaxX - o.MinX + 1) * sx, (o.MaxY - o.MinY + 1) * sy), c);
             }
 
-            // Fog: dim cells the player cannot see (coarse 3x3 blocks for speed).
+            // Fog: one texel per cell, refreshed a few times per second, drawn with linear filtering.
             if (!_match.Views.RevealAll)
             {
-                for (int y = 0; y < g.Height; y += 3)
-                {
-                    for (int x = 0; x < g.Width; x += 3)
-                    {
-                        var cell = new GridPos(x + 1, y + 1);
-                        if (!sim.Vision.IsVisible(me, cell))
-                        {
-                            float a = sim.Vision.IsExplored(me, cell) ? 0.28f : 0.5f;
-                            DrawRect(new Rect2(x * sx, y * sy, 3 * sx + 0.5f, 3 * sy + 0.5f), new Color(0f, 0f, 0f, a));
-                        }
-                    }
-                }
+                UpdateFogTexture(sim, me);
+                DrawTextureRect(_fogTexture, rect, false);
             }
 
             foreach (var s in sim.Territory.Sectors)
@@ -132,7 +126,8 @@ namespace OCT7.Game.UI
                     break;
                 }
 
-                pts[i] = ToMini(new Vec2(ground.X, ground.Z));
+                var m = ToMini(new Vec2(ground.X, ground.Z));
+                pts[i] = new Vector2(Mathf.Clamp(m.X, 0f, Size.X), Mathf.Clamp(m.Y, 0f, Size.Y));
             }
 
             if (ok)
@@ -142,6 +137,41 @@ namespace OCT7.Game.UI
             }
 
             DrawRect(rect, new Color(0.86f, 0.76f, 0.5f, 0.8f), false, 1.5f);
+        }
+
+        private void UpdateFogTexture(Simulation sim, int me)
+        {
+            var g = sim.Map.Grid;
+            if (_fogImage == null)
+            {
+                _fogBytes = new byte[g.Width * g.Height * 4];
+                _fogImage = Image.CreateFromData(g.Width, g.Height, false, Image.Format.Rgba8, _fogBytes);
+                _fogTexture = ImageTexture.CreateFromImage(_fogImage);
+                TextureFilter = TextureFilterEnum.Linear;
+            }
+
+            if (_fogTick >= 0 && sim.Tick - _fogTick < 3)
+            {
+                return;
+            }
+
+            _fogTick = sim.Tick;
+            for (int y = 0; y < g.Height; y++)
+            {
+                for (int x = 0; x < g.Width; x++)
+                {
+                    var cell = new GridPos(x, y);
+                    byte a = sim.Vision.IsVisible(me, cell) ? (byte)0 : sim.Vision.IsExplored(me, cell) ? (byte)80 : (byte)140;
+                    int i = (y * g.Width + x) * 4;
+                    _fogBytes[i] = 0;
+                    _fogBytes[i + 1] = 0;
+                    _fogBytes[i + 2] = 0;
+                    _fogBytes[i + 3] = a;
+                }
+            }
+
+            _fogImage.SetData(g.Width, g.Height, false, Image.Format.Rgba8, _fogBytes);
+            _fogTexture.Update(_fogImage);
         }
 
         public override void _GuiInput(InputEvent @event)

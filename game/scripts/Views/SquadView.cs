@@ -75,20 +75,20 @@ namespace OCT7.Game.Views
                 footprint = 2.2f + 0.45f * _def.SquadSize;
             }
 
-            var disc = new MeshInstance3D
+            // Ground decals: a faint team-colored ring always, a bright ring when selected (CoH-style outlines, no filled discs).
+            AddChild(new MeshInstance3D
             {
-                Mesh = MeshKit.CylMesh(footprint, footprint, 0.03f, 28),
-                MaterialOverride = MeshKit.Flat(new Color(team, 0.22f)),
-                Position = new Vector3(0f, 0.04f, 0f),
+                Mesh = MeshKit.RingMesh(footprint, 0.15f, 40),
+                MaterialOverride = MeshKit.Flat(new Color(team.Lightened(0.2f), 0.45f)),
+                Position = new Vector3(0f, 0.05f, 0f),
                 CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
-            };
-            AddChild(disc);
+            });
 
             _ring = new MeshInstance3D
             {
-                Mesh = MeshKit.CylMesh(footprint + 0.35f, footprint + 0.35f, 0.04f, 32),
-                MaterialOverride = MeshKit.Flat(new Color(0.55f, 1f, 0.55f, 0.45f)),
-                Position = new Vector3(0f, 0.03f, 0f),
+                Mesh = MeshKit.RingMesh(footprint + 0.45f, 0.32f, 48),
+                MaterialOverride = MeshKit.Flat(new Color(0.7f, 1f, 0.6f, 0.95f)),
+                Position = new Vector3(0f, 0.06f, 0f),
                 CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
                 Visible = false,
             };

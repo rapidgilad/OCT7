@@ -47,6 +47,9 @@ namespace OCT7.Game
         /// <summary>Start with the camera centered on the local player's squads.</summary>
         public bool FocusArmy { get; private set; }
 
+        /// <summary>Initial camera distance in meters (0 = default). Handy for close-up screenshots.</summary>
+        public float CameraDistance { get; private set; }
+
         /// <summary>Select all local squads on start (shows selection visuals in screenshots).</summary>
         public bool SelectAllOnStart { get; private set; }
 
@@ -82,6 +85,7 @@ namespace OCT7.Game
                     case "--overview": o.Overview = true; break;
                     case "--focus-army": o.FocusArmy = true; break;
                     case "--select-all": o.SelectAllOnStart = true; break;
+                    case "--distance": o.CameraDistance = float.Parse(Next(), CultureInfo.InvariantCulture); break;
                     case "--screenshot": o.ScreenshotPath = Next(); break;
                     case "--after-frames": o.ScreenshotAfterFrames = int.Parse(Next(), CultureInfo.InvariantCulture); break;
                     default: GD.PushWarning($"Unknown launch option '{args[i]}'"); break;

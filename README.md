@@ -10,23 +10,29 @@ A squad-based tactical RTS in the Company of Heroes tradition, set in modern Mid
 
 > **Working title** *Iron Swords: Frontlines* is a placeholder.
 
-![Sandbox overview: IDF (blue) and Hamas (red) squads meeting around the central block](docs/images/sandbox-overview.png)
+![Firefight: an IDF rifle squad engages Hamas fighters holding a victory point](docs/images/v01-firefight.png)
 
 ## Status
-**M0 Foundations is done.** This is a playable skeleton:
-- A deterministic C# simulation: 10 Hz tick, commands, A* pathfinding, movement, economy, data-driven units.
-- A Godot 4.5.1 .NET sandbox: RTS camera, selection, right-click move, debug HUD.
-- 32 unit tests, an AI-vs-AI batch runner and CI.
+**v0.1 (first playable skirmish) is done.** You can play a full 1v1 match against the AI as any of the three factions.
+- **Match flow:** pick your faction, the enemy faction and the AI difficulty (Easy / Normal / Hard). Build with engineers, produce squads and vehicles, capture sectors, and fight. You win on VP tickets or by destroying the enemy HQ.
+- **Combat model:** CoH-style:
+  - Accuracy by range band and directional cover, both automatic (building and wall edges) and engineer sandbags.
+  - Suppression and pinning, retreat and reinforce, vehicle front and rear armor, fog of war with line of sight.
+- **Art:** rough procedural low-poly models with procedural animation, tracers, explosions and smoke. No audio yet.
+- **Under the hood:** a deterministic C# simulation, 93 unit tests, and an AI-vs-AI MatchRunner that verifies determinism across all 9 matchups. CI runs a full headless match in the real game.
 
-Next up is **M1: core combat** (cover, suppression, retreat, sectors, squad combat). See [docs/09](docs/09-production-roadmap.md).
+Next: playtesting, a balance pass, then the signature systems (tunnels, Iron Dome, Trophy, Intel), veterancy, heroes and doctrines. See [docs/09](docs/09-production-roadmap.md).
 
-![Close-up: selected IDF squads (green rings) with the Merkava and Namer ahead of the infantry](docs/images/sandbox-closeup.png)
+| | |
+|---|---|
+| ![Main menu](docs/images/v01-menu.png) | ![Opening: HQ, engineers and riflemen, HUD, minimap and command card](docs/images/v01-base.png) |
+| ![Overview with fog of war and sector borders](docs/images/v01-overview-fog.png) | ![End screen](docs/images/v01-end.png) |
 
 ## Getting started
 
-### Play the sandbox locally
+### Play a skirmish locally
 1. Install **Godot 4.5.1 .NET** (the ".NET" download, not the standard one) and the **.NET 8 SDK**.
-2. Open `game/project.godot` in Godot, then press **F5**.
+2. Open `game/project.godot` in Godot, then press **F5**. Pick factions and difficulty, then click **Start skirmish**.
 3. Controls:
 
    | Input | Action |
@@ -34,12 +40,18 @@ Next up is **M1: core combat** (cover, suppression, retreat, sectors, squad comb
    | WASD / arrows / screen edge | Pan |
    | Mouse wheel | Zoom |
    | Q / E | Rotate |
-   | Left click / drag | Select |
+   | Left click / drag | Select (double-click: all of that type on screen) |
    | Shift + click | Add to selection |
-   | Ctrl + A | Select all |
-   | Right click | Move |
+   | Ctrl + A | Select all your squads |
+   | Ctrl + 1–9 / 1–9 | Assign / recall control group |
+   | Right click | Context order: move (snaps to cover), attack, help build; with a building selected, set rally point |
+   | R / T / H | Retreat / reinforce / stop |
+   | Command card | Build menu (engineers) and production (buildings); each button shows its hotkey |
+   | Space | Rotate a structure while placing it |
+   | Minimap | Left click / drag: jump the camera. Right click: move the selected squads |
+   | Esc | Cancel placement, clear selection, or open the pause menu (resume / surrender / main menu) |
 
-   You play IDF (blue). The Hamas AI (red) advances toward you.
+   The cursor preview shows cover at the destination: **green** heavy, **yellow** light, **red** open.
 
 ### Develop (locally or in Claude Code cloud sessions)
 ```bash
@@ -47,6 +59,7 @@ dotnet build OCT7.sln                                    # sim + tests + tools +
 dotnet test tests/OCT7.Sim.Tests                         # unit tests
 dotnet run --project tools/MatchRunner -- --matches 20 --verify-determinism   # AI-vs-AI batch
 godot --headless --path game -- --smoke-test 600         # run the real game headless
+godot --headless --path game -- --smoke-test 30000 --full-match   # full AI-vs-AI match, must end in a victory
 ```
 In Claude Code cloud sessions, `.claude/hooks/session-start.sh` installs .NET 8, Godot and the software renderers automatically, so Claude can build, test, run and **screenshot** the game. Project rules for Claude are in [CLAUDE.md](CLAUDE.md).
 

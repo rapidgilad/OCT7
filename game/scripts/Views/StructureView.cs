@@ -45,8 +45,8 @@ namespace OCT7.Game.Views
             float r = Mathf.Max(w, d) * 0.62f;
             _ring = new MeshInstance3D
             {
-                Mesh = MeshKit.CylMesh(r, r, 0.04f, 36),
-                MaterialOverride = MeshKit.Flat(new Color(0.55f, 1f, 0.55f, 0.35f)),
+                Mesh = MeshKit.RingMesh(r, 0.4f, 48),
+                MaterialOverride = MeshKit.Flat(new Color(0.7f, 1f, 0.6f, 0.95f)),
                 Position = new Vector3(0f, 0.05f, 0f),
                 CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
                 Visible = false,

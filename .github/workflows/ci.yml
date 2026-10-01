@@ -54,3 +54,6 @@ jobs:
 
       - name: Smoke test (600 ticks, AI vs AI)
         run: timeout 120 "$GODOT" --headless --path game -- --smoke-test 600
+
+      - name: Full-match smoke test (must end in a victory)
+        run: timeout 300 "$GODOT" --headless --path game -- --smoke-test 30000 --full-match --p0 hezbollah --p1 idf --difficulty hard

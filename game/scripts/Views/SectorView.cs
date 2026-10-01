@@ -54,7 +54,7 @@ namespace OCT7.Game.Views
                 float r = sim.Rules.CaptureRadius;
                 var ring = new MeshInstance3D
                 {
-                    Mesh = MeshKit.CylMesh(r, r, 0.03f, 40),
+                    Mesh = MeshKit.RingMesh(r, 0.35f, 64),
                     MaterialOverride = MeshKit.Flat(new Color(1f, 1f, 1f, 0.1f), unique: true),
                     Position = new Vector3(0f, 0.035f, 0f),
                     CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
@@ -84,7 +84,7 @@ namespace OCT7.Game.Views
                 ((StandardMaterial3D)flag.MaterialOverride).AlbedoColor = c;
                 flag.Position = new Vector3(0f, height, 0.68f);
                 var ringColor = s.OwnerId >= 0 ? TeamColors.For(s.OwnerId) : Colors.White;
-                ((StandardMaterial3D)ring.MaterialOverride).AlbedoColor = new Color(ringColor, s.IsContested ? 0.28f : 0.12f);
+                ((StandardMaterial3D)ring.MaterialOverride).AlbedoColor = new Color(ringColor, s.IsContested ? 0.9f : 0.5f);
             }
         }
     }

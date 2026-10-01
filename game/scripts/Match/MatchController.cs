@@ -71,6 +71,13 @@ namespace OCT7.Game.Match
             }
 
             Sim = MatchSetup.CreateSkirmish(data, MatchSettings.PlayerFaction, MatchSettings.EnemyFaction, MatchSettings.Seed, MatchSettings.MapId);
+            foreach (var s in Sim.World.Squads)
+            {
+                if (s.OwnerId == LocalPlayerId)
+                {
+                    _fielded++; // starting squads count as fielded
+                }
+            }
             if (AiControlsLocalPlayer)
             {
                 _ais.Add(SkirmishAi.Create(Sim, LocalPlayerId, MatchSettings.Difficulty));
@@ -87,6 +94,13 @@ namespace OCT7.Game.Match
             int fastForward = _options.FullMatch ? int.MaxValue : _options.FastForwardTicks;
             const int fastForwardCap = 60 * 60 * 10; // one simulated hour
             for (int i = 0; i < fastForward && i < fastForwardCap && !Sim.IsOver; i++)
+            {
+                SimLoop.Step(Sim, _ais, _commandBuffer);
+                CountStats();
+            }
+
+            // Screenshot helper: with --focus-army, keep going (up to 2 simulated minutes) until someone is shooting.
+            for (int i = 0; _options.FocusArmy && _options.FastForwardTicks > 0 && i < 1200 && !Sim.IsOver && !AnyoneFiring(5); i++)
             {
                 SimLoop.Step(Sim, _ais, _commandBuffer);
                 CountStats();
@@ -260,7 +274,7 @@ namespace OCT7.Game.Match
                 AddChild(new ScreenshotTool(_options.ScreenshotPath, _options.ScreenshotAfterFrames) { Name = "Screenshot" });
             }
 
-            if (MatchSettings.Demo)
+            if (MatchSettings.Demo && string.IsNullOrEmpty(_options.ScreenshotPath))
             {
                 Hud.ShowMessage("Demo: AI plays both sides", UiTheme.Accent);
             }
@@ -279,8 +293,9 @@ namespace OCT7.Game.Match
             }
 
             var hq = Sim.GetPlayer(LocalPlayerId).HqPosition;
-            var focus = _options.FocusArmy ? ArmyCentroid(LocalPlayerId) : hq + (center - hq) * 0.12f;
-            CameraRig.SetView(new Vector3(focus.X, 0f, focus.Y), 75f, YawToward(hq, center));
+            var focus = _options.FocusArmy ? FrontlineFocus(LocalPlayerId) : hq + (center - hq) * 0.06f;
+            float distance = _options.CameraDistance > 0f ? _options.CameraDistance : 58f;
+            CameraRig.SetView(new Vector3(focus.X, 0f, focus.Y), distance, YawToward(hq, center));
         }
 
         /// <summary>Camera yaw (degrees, snapped to 45°) that looks from <paramref name="from"/> toward <paramref name="to"/>.</summary>
@@ -294,6 +309,55 @@ namespace OCT7.Game.Match
 
             float yaw = Mathf.RadToDeg(Mathf.Atan2(-d.X, -d.Y));
             return Mathf.PosMod(Mathf.Round(yaw / 45f) * 45f, 360f);
+        }
+
+        private bool AnyoneFiring(int withinTicks)
+        {
+            foreach (var s in Sim.World.Squads)
+            {
+                if (Sim.Tick - s.LastFiredTick <= withinTicks)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Where the fighting is: the own squad of the closest own–enemy pair (pairs exchanging fire first),
+        /// pulled a third of the way toward its opponent. Falls back to the army centroid.
+        /// </summary>
+        private Vec2 FrontlineFocus(int playerId)
+        {
+            float best = float.MaxValue;
+            var focus = ArmyCentroid(playerId);
+            foreach (var mine in Sim.World.Squads)
+            {
+                if (mine.OwnerId != playerId)
+                {
+                    continue;
+                }
+
+                foreach (var enemy in Sim.World.Squads)
+                {
+                    if (enemy.OwnerId == playerId)
+                    {
+                        continue;
+                    }
+
+                    float d = Vec2.Distance(mine.Position, enemy.Position);
+                    bool firing = Sim.Tick - mine.LastFiredTick < 20 || Sim.Tick - enemy.LastFiredTick < 20;
+                    float score = d - (firing && d < 60f ? 1000f : 0f);
+                    if (score < best)
+                    {
+                        best = score;
+                        focus = mine.Position + (enemy.Position - mine.Position) * Mathf.Min(0.33f, 20f / Mathf.Max(d, 1f));
+                    }
+                }
+            }
+
+            return focus;
         }
 
         private Vec2 ArmyCentroid(int playerId)

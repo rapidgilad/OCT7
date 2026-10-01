@@ -75,16 +75,23 @@ The original team-scale plan (about 15 people, about 24 months, $2–3.5M) remai
 | V3 | Map editor and mod support |
 
 ## 8. Status and next 30 days
-**M0 Foundations: done** (skeleton in this repo):
-- Repo layout, `CLAUDE.md`, the session-start hook, and GitHub Actions CI.
-- `sim/`: 10 Hz deterministic tick, commands, seeded RNG, state hash, grid map, A* pathfinding, squad movement, economy (HQ income + upkeep), data loader + validator, match setup, and a placeholder AI.
-- 32 xUnit tests; MatchRunner with a determinism check across all matchups.
-- Godot sandbox: an RTS camera, selection, right-click move, HUD, and screenshots from the cloud.
+**M0 Foundations: done.**
 
-**Next (M1 core combat prototype):**
-1. Install Godot 4.5.1 .NET + .NET 8 SDK locally. Open `game/project.godot` and press F5 to play the sandbox.
-2. Cover nodes + accuracy model + suppression, with tests based on [02](02-core-gameplay.md).
-3. Retreat and reinforce.
-4. Sectors: capture, supply connection, income.
-5. Squad-vs-squad combat (models die, squads wipe).
-6. First playable: Golani squads vs Qassam squads, fighting over cover on the sandbox map.
+**v0.1 "First playable skirmish": done.** This is a vertical slice: it pulls the core of M1–M4 forward with procedural art.
+- **Factions and rosters:** all three factions, each with a core roster (engineers, line infantry, MG, sniper, AT and ATGM teams, vehicles) and tiers HQ → T1 → T2 → T3.
+- **Sim:**
+  - Combat: accuracy bands, directional cover (automatic and sandbags), per-model HP, vehicle front/rear armor and penetration, suppression and pinning, setup weapons.
+  - Squads: retreat, reinforce and healing.
+  - Map control: vision with line of sight, sectors with supply connection and income, VP tickets, victory and surrender.
+  - Building: production queues and engineer construction.
+- **AI:** one SkirmishAi with Easy, Normal and Hard presets. It follows build orders, sends cappers, attacks and defends, retreats and reinforces, and sees only what fog of war allows.
+- **Testing:** 93 xUnit tests. MatchRunner plays full matches for all 9 matchups and verifies determinism. The Godot host and MatchRunner produce identical state hashes.
+- **Presentation:** procedural low-poly soldiers, vehicles, structures and props; procedural animation; pooled VFX (tracers, rockets, explosions, smoke); fog of war; territory borders.
+- **UI:** HUD with resources, tickets, minimap, selection panel and command card; main menu, pause and end screens.
+
+**Next:**
+1. **Play it on your machine** and run the M1 fun test: do cover and suppression decide fights? Note what feels wrong.
+2. **Balance pass with MatchRunner.** Hamas is currently strong, and Hard must beat Easy in more than 70% of matches.
+3. **Signature systems (M2/M3 scope):** tunnels, Iron Dome, Trophy, Intel; then veterancy, heroes and doctrines; then the deferred units (K9, D9R, Observer, Quadcopter, Mutabar, Katyusha).
+4. **Audio:** gunfire, explosions and unit barks, once sources are chosen (see [06](06-audio-voice-cinematics.md)).
+5. **Art:** swap procedural models for `.glb` assets. `ModelFactory` already loads `res://assets/models/{id}.glb` for vehicles and structures when one is present; infantry needs a rigged-asset path.

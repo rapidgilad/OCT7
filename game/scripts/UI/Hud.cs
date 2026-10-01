@@ -44,14 +44,17 @@ namespace OCT7.Game.UI
             _match = match;
             _player = player;
             Theme = UiTheme.Create();
-            SetAnchorsPreset(LayoutPreset.FullRect);
+            SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
             MouseFilter = MouseFilterEnum.Ignore;
             BuildTopBar();
             BuildBottomBar();
             _messageBox = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
             _messageBox.SetAnchorsPreset(LayoutPreset.CenterTop);
-            _messageBox.Position = new Vector2(-260f, 58f);
-            _messageBox.CustomMinimumSize = new Vector2(520f, 0f);
+            _messageBox.OffsetLeft = -260f;
+            _messageBox.OffsetRight = 260f;
+            _messageBox.OffsetTop = 58f;
+            _messageBox.OffsetBottom = 58f;
+            _messageBox.GrowHorizontal = GrowDirection.Both;
             AddChild(_messageBox);
         }
 

@@ -23,20 +23,34 @@ dotnet format whitespace OCT7.sln --verify-no-changes   # formatting (CI enforce
 
 godot --headless --path game --import                   # (re)import assets after adding files
 godot --headless --path game -- --smoke-test 600        # run the real game headless, print state hash, exit 0/1
+godot --headless --path game -- --smoke-test 30000 --full-match   # full AI-vs-AI match; fails unless a side wins
 
 # Screenshot (Forward+ via software Vulkan, as the player sees it). Use 1280x720; it renders at a few fps.
 xvfb-run -a -s "-screen 0 1280x720x24" godot --path game --rendering-method forward_plus --audio-driver Dummy \
-  --resolution 1280x720 -- --demo --focus-army --fast-forward 120 --screenshot /abs/path/shot.png --after-frames 30
+  --resolution 1280x720 -- --demo --fast-forward 7200 --focus-army --distance 40 --screenshot /abs/path/shot.png --after-frames 6
 ```
-Launch options after `--`:
-- `--demo`: AI also plays the local side.
-- `--fast-forward N`: simulate N ticks before the first frame.
-- `--overview`: camera frames the whole map.
-- `--focus-army`: camera centers on your squads.
-- `--select-all`: start with all your squads selected.
-- `--seed S`, `--p0`, `--p1`: seed and factions.
-- `--screenshot PATH`, `--after-frames N`: save a frame and quit.
-- `--smoke-test N`: run N ticks headless and exit.
+Scenes: `scenes/menu.tscn` (`UI/MainMenu.cs`, the main scene) → `scenes/match.tscn` (`Match/MatchController.cs`, which hosts the sim and AI and builds the world and UI in code).
+
+Launch options after `--` (any match option skips the menu; the menu reads them once):
+- Match setup:
+  - `--quick`: start a skirmish with the defaults.
+  - `--p0`, `--p1`: player and enemy factions.
+  - `--difficulty easy|normal|hard`, `--seed S`, `--map ID`.
+- AI control:
+  - `--demo`: AI also plays the local side (no fog unless `--fog`).
+  - `--fog`: keep fog of war in demo mode.
+- Running ahead:
+  - `--fast-forward N`: simulate N ticks before the first frame. With `--focus-army`, it keeps going until someone is shooting.
+  - `--full-match`: with `--smoke-test N`, run until victory (N = tick cap, fails without a winner); otherwise fast-forward to the end screen.
+  - `--smoke-test N`: run N ticks headless and exit.
+- Camera:
+  - `--overview`: frame the whole map.
+  - `--focus-army`: center on the nearest fight.
+  - `--distance M`: initial camera distance.
+  - `--select-all`: start with all your squads selected.
+- Screenshots:
+  - `--menu`: show the main menu even with other options (menu screenshots).
+  - `--screenshot PATH`, `--after-frames N`: save a frame and quit.
 
 ## Golden rules
 1. **Sim/presentation split.** Gameplay logic goes in `sim/`. `game/` reads sim state, interpolates, renders, and sends **commands**. It never mutates sim state directly.
@@ -52,5 +66,11 @@ Launch options after `--`:
 6. **Godot scripts:** `partial` classes deriving from Godot nodes; file name = class name. Scenes stay minimal; build nodes in code where practical. Commit `*.uid` and `*.import` files; never commit `.godot/`.
 7. **Content rules** (`docs/01-vision-and-scope.md`): no civilian NPCs or civilian-harm mechanics, fictional heroes, faction names and emblems via localization keys.
 
-## Where things are going next (docs/09 roadmap, M1)
-Cover, accuracy and suppression → retreat and reinforce → sector capture and income → combat between squads. Each step: sim + tests first, then visuals, then a screenshot check.
+## Where things are going next (docs/09 §8)
+v0.1, the first playable skirmish, is done. Next:
+1. Playtest feedback and a balance pass with MatchRunner.
+2. Signature systems: tunnels, Iron Dome, Trophy, Intel.
+3. Veterancy, heroes and doctrines.
+4. The deferred units.
+
+Each step: sim + tests first, then visuals, then a screenshot check. Procedural models live in `game/scripts/Visual/`; a `res://assets/models/{id}.glb` overrides a vehicle or structure model.
