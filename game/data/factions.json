@@ -1,0 +1,32 @@
+// Factions — docs/factions/*.md. Display names are localization keys (regional variants, docs/01).
+{
+  "factions": [
+    {
+      "id": "idf",
+      "displayNameKey": "faction.idf.name",
+      "displayName": "IDF",
+      "uniqueResource": "intel",
+      "voiceLanguage": "he",
+      "startingUnits": ["idf_engineers"],
+      "sandboxUnits": ["idf_engineers", "idf_golani", "idf_golani", "idf_mag_team", "idf_sniper", "idf_k9", "idf_namer", "idf_merkava"]
+    },
+    {
+      "id": "hamas",
+      "displayNameKey": "faction.hamas.name",
+      "displayName": "Hamas",
+      "uniqueResource": "tunnels",
+      "voiceLanguage": "ar-ps",
+      "startingUnits": ["hamas_diggers"],
+      "sandboxUnits": ["hamas_diggers", "hamas_fighters", "hamas_fighters", "hamas_fighters", "hamas_rpg_team", "hamas_pkm_team", "hamas_ghoul_sniper", "hamas_kornet_team"]
+    },
+    {
+      "id": "hezbollah",
+      "displayNameKey": "faction.hezbollah.name",
+      "displayName": "Hezbollah",
+      "uniqueResource": "rocket_stockpile",
+      "voiceLanguage": "ar-lb",
+      "startingUnits": ["hzb_engineers"],
+      "sandboxUnits": ["hzb_engineers", "hzb_fighters", "hzb_fighters", "hzb_pkm_team", "hzb_rpg29_team", "hzb_kornet_team", "hzb_zu23_technical", "hzb_radwan"]
+    }
+  ]
+}

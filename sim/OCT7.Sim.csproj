@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    OCT7.Sim — the deterministic game simulation (all game rules).
+    Rules for this project:
+      * No engine references (no Godot, no Unity). Presentation lives in /game.
+      * netstandard2.1 + C# 9 so the code stays portable to Unity if the team ever needs it.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <RootNamespace>OCT7.Sim</RootNamespace>
+    <AssemblyName>OCT7.Sim</AssemblyName>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+
+</Project>

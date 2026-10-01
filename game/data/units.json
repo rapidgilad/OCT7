@@ -1,0 +1,39 @@
+// Solo V1 core rosters — docs/factions/*.md ("Solo V1 core roster" tables).
+// tier: 0 = HQ, 1..3 = tech tiers. moveSpeed in m/s. Costs: manpower / munitions / fuel.
+{
+  "units": [
+    { "id": "idf_engineers",     "factionId": "idf", "name": "Yahalom Combat Engineers", "tier": 0, "category": "infantry", "squadSize": 4, "pop": 5,  "manpower": 220, "munitions": 0,  "fuel": 0,   "moveSpeed": 4.0, "healthPerModel": 80 },
+    { "id": "idf_k9",            "factionId": "idf", "name": "Oketz K9 Team",            "tier": 0, "category": "support",  "squadSize": 2, "pop": 3,  "manpower": 160, "munitions": 0,  "fuel": 0,   "moveSpeed": 4.6, "healthPerModel": 70 },
+    { "id": "idf_golani",        "factionId": "idf", "name": "Golani Rifle Squad",       "tier": 1, "category": "infantry", "squadSize": 5, "pop": 7,  "manpower": 300, "munitions": 0,  "fuel": 0,   "moveSpeed": 4.0, "healthPerModel": 90 },
+    { "id": "idf_mag_team",      "factionId": "idf", "name": "MAG Machine Gun Team",     "tier": 1, "category": "support",  "squadSize": 3, "pop": 6,  "manpower": 260, "munitions": 0,  "fuel": 0,   "moveSpeed": 3.4, "healthPerModel": 80 },
+    { "id": "idf_sniper",        "factionId": "idf", "name": "Sniper Team",              "tier": 1, "category": "infantry", "squadSize": 2, "pop": 6,  "manpower": 340, "munitions": 0,  "fuel": 0,   "moveSpeed": 4.0, "healthPerModel": 70 },
+    { "id": "idf_spike_team",    "factionId": "idf", "name": "Spike MR ATGM Team",       "tier": 2, "category": "support",  "squadSize": 3, "pop": 6,  "manpower": 300, "munitions": 20, "fuel": 0,   "moveSpeed": 3.4, "healthPerModel": 80 },
+    { "id": "idf_namer",         "factionId": "idf", "name": "Namer Heavy APC",          "tier": 2, "category": "vehicle",  "squadSize": 1, "pop": 10, "manpower": 300, "munitions": 0,  "fuel": 70,  "moveSpeed": 7.0, "healthPerModel": 900 },
+    { "id": "idf_merkava",       "factionId": "idf", "name": "Merkava Mk.4M",            "tier": 3, "category": "vehicle",  "squadSize": 1, "pop": 16, "manpower": 480, "munitions": 0,  "fuel": 180, "moveSpeed": 6.0, "healthPerModel": 1200 },
+    { "id": "idf_d9r",           "factionId": "idf", "name": "D9R Armored Bulldozer",    "tier": 3, "category": "vehicle",  "squadSize": 1, "pop": 8,  "manpower": 300, "munitions": 0,  "fuel": 70,  "moveSpeed": 4.0, "healthPerModel": 1400 },
+    { "id": "idf_hero_ronen",    "factionId": "idf", "name": "Maj. Ido \"Ze'ev\" Ronen", "tier": 1, "category": "hero",     "squadSize": 4, "pop": 9,  "manpower": 380, "munitions": 40, "fuel": 0,   "moveSpeed": 4.4, "healthPerModel": 120 },
+
+    { "id": "hamas_diggers",      "factionId": "hamas", "name": "Tunnel Diggers",         "tier": 0, "category": "infantry", "squadSize": 4, "pop": 4, "manpower": 180, "munitions": 0,  "fuel": 0, "moveSpeed": 4.0, "healthPerModel": 70 },
+    { "id": "hamas_fighters",     "factionId": "hamas", "name": "Qassam Fighters",        "tier": 0, "category": "infantry", "squadSize": 6, "pop": 5, "manpower": 220, "munitions": 0,  "fuel": 0, "moveSpeed": 4.2, "healthPerModel": 70 },
+    { "id": "hamas_observer",     "factionId": "hamas", "name": "Observer",               "tier": 0, "category": "support",  "squadSize": 2, "pop": 2, "manpower": 100, "munitions": 0,  "fuel": 0, "moveSpeed": 4.4, "healthPerModel": 60 },
+    { "id": "hamas_rpg_team",     "factionId": "hamas", "name": "Yassin-105 RPG Team",    "tier": 1, "category": "support",  "squadSize": 3, "pop": 5, "manpower": 240, "munitions": 0,  "fuel": 0, "moveSpeed": 4.0, "healthPerModel": 70 },
+    { "id": "hamas_pkm_team",     "factionId": "hamas", "name": "PKM MG Team",            "tier": 1, "category": "support",  "squadSize": 3, "pop": 5, "manpower": 220, "munitions": 0,  "fuel": 0, "moveSpeed": 3.6, "healthPerModel": 70 },
+    { "id": "hamas_ghoul_sniper", "factionId": "hamas", "name": "Al-Ghoul Sniper",        "tier": 1, "category": "infantry", "squadSize": 1, "pop": 5, "manpower": 300, "munitions": 0,  "fuel": 0, "moveSpeed": 4.0, "healthPerModel": 70 },
+    { "id": "hamas_quadcopter",   "factionId": "hamas", "name": "Quadcopter Team",        "tier": 1, "category": "support",  "squadSize": 2, "pop": 3, "manpower": 200, "munitions": 20, "fuel": 0, "moveSpeed": 4.2, "healthPerModel": 60 },
+    { "id": "hamas_kornet_team",  "factionId": "hamas", "name": "Kornet ATGM Team",       "tier": 2, "category": "support",  "squadSize": 3, "pop": 6, "manpower": 320, "munitions": 30, "fuel": 0, "moveSpeed": 3.4, "healthPerModel": 70 },
+    { "id": "hamas_mutabar_team", "factionId": "hamas", "name": "Mutabar MANPADS Team",   "tier": 2, "category": "support",  "squadSize": 2, "pop": 4, "manpower": 220, "munitions": 20, "fuel": 0, "moveSpeed": 4.0, "healthPerModel": 70 },
+    { "id": "hamas_elite",        "factionId": "hamas", "name": "Al-Qassam Elite Squad",  "tier": 3, "category": "infantry", "squadSize": 5, "pop": 8, "manpower": 400, "munitions": 0,  "fuel": 0, "moveSpeed": 4.4, "healthPerModel": 95 },
+    { "id": "hamas_hero_khuld",   "factionId": "hamas", "name": "\"Al-Khuld\" (The Mole)", "tier": 1, "category": "hero",    "squadSize": 4, "pop": 7, "manpower": 300, "munitions": 30, "fuel": 0, "moveSpeed": 4.4, "healthPerModel": 110 },
+
+    { "id": "hzb_engineers",       "factionId": "hezbollah", "name": "Combat Engineers",       "tier": 0, "category": "infantry", "squadSize": 4, "pop": 4,  "manpower": 200, "munitions": 0,  "fuel": 0,  "moveSpeed": 4.0, "healthPerModel": 75 },
+    { "id": "hzb_fighters",        "factionId": "hezbollah", "name": "Resistance Fighters",    "tier": 0, "category": "infantry", "squadSize": 5, "pop": 6,  "manpower": 260, "munitions": 0,  "fuel": 0,  "moveSpeed": 4.0, "healthPerModel": 85 },
+    { "id": "hzb_pkm_team",        "factionId": "hezbollah", "name": "PKM MG Team",            "tier": 1, "category": "support",  "squadSize": 3, "pop": 5,  "manpower": 240, "munitions": 0,  "fuel": 0,  "moveSpeed": 3.4, "healthPerModel": 80 },
+    { "id": "hzb_rpg29_team",      "factionId": "hezbollah", "name": "RPG-29 Team",            "tier": 1, "category": "support",  "squadSize": 3, "pop": 5,  "manpower": 260, "munitions": 0,  "fuel": 0,  "moveSpeed": 3.8, "healthPerModel": 80 },
+    { "id": "hzb_hs50_sniper",     "factionId": "hezbollah", "name": "HS.50 Sniper",           "tier": 1, "category": "infantry", "squadSize": 2, "pop": 6,  "manpower": 320, "munitions": 0,  "fuel": 0,  "moveSpeed": 4.0, "healthPerModel": 70 },
+    { "id": "hzb_kornet_team",     "factionId": "hezbollah", "name": "Kornet ATGM Team",       "tier": 2, "category": "support",  "squadSize": 3, "pop": 6,  "manpower": 320, "munitions": 25, "fuel": 0,  "moveSpeed": 3.4, "healthPerModel": 80 },
+    { "id": "hzb_zu23_technical",  "factionId": "hezbollah", "name": "ZU-23-2 Technical",      "tier": 2, "category": "vehicle",  "squadSize": 1, "pop": 6,  "manpower": 260, "munitions": 0,  "fuel": 25, "moveSpeed": 9.0, "healthPerModel": 350 },
+    { "id": "hzb_radwan",          "factionId": "hezbollah", "name": "Radwan Commandos",       "tier": 3, "category": "infantry", "squadSize": 5, "pop": 9,  "manpower": 420, "munitions": 0,  "fuel": 0,  "moveSpeed": 4.6, "healthPerModel": 100 },
+    { "id": "hzb_katyusha",        "factionId": "hezbollah", "name": "Katyusha MLRS Truck",    "tier": 3, "category": "vehicle",  "squadSize": 1, "pop": 12, "manpower": 380, "munitions": 0,  "fuel": 80, "moveSpeed": 7.0, "healthPerModel": 400 },
+    { "id": "hzb_hero_sayyad",     "factionId": "hezbollah", "name": "\"Al-Sayyad\" (The Hunter)", "tier": 1, "category": "hero", "squadSize": 2, "pop": 7, "manpower": 360, "munitions": 40, "fuel": 0, "moveSpeed": 4.2, "healthPerModel": 110 }
+  ]
+}

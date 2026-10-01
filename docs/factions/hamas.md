@@ -20,8 +20,8 @@ This is what ships in V1. Everything else in this document is the long-term visi
 | Tier | V1 content |
 |---|---|
 | HQ | Tunnel Diggers (tunnels, IEDs, booby traps), Qassam Fighters, Observer |
-| T1 | Yassin-105 RPG Team, PKM MG Team, Al-Ghoul Sniper |
-| T2 | Kornet ATGM Team, Quadcopter Team, Mutabar MANPADS Team, Rocket Launch Cell, Shuath EFP |
+| T1 | Yassin-105 RPG Team, PKM MG Team, Al-Ghoul Sniper, Quadcopter Team |
+| T2 | Kornet ATGM Team, Mutabar MANPADS Team, Rocket Launch Cell, Shuath EFP |
 | T3 | Al-Qassam Elite Squad; **T4 content folded in:** special weapons below |
 | Special weapons | Heavy Rocket Salvo, Tunnel Bomb |
 | Doctrine | **Underground Warfare** |

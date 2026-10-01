@@ -1,4 +1,4 @@
-# Iron Swords: Frontlines — V1 Game Design (codename OCT7)
+# Iron Swords: Frontlines (codename OCT7)
 
 A squad-based tactical RTS in the Company of Heroes tradition, set in modern Middle East warfare. It has three asymmetric factions:
 
@@ -10,8 +10,55 @@ A squad-based tactical RTS in the Company of Heroes tradition, set in modern Mid
 
 > **Working title** *Iron Swords: Frontlines* is a placeholder.
 
-## Production setup
-**Solo developer + Claude Code.** V1 scope, engine and pipeline are sized for one person. The faction docs hold the full long-term vision and mark the **Solo V1 core roster** that actually ships.
+![Sandbox overview: IDF (blue) and Hamas (red) squads meeting around the central block](docs/images/sandbox-overview.png)
+
+## Status
+**M0 Foundations is done.** This is a playable skeleton:
+- A deterministic C# simulation: 10 Hz tick, commands, A* pathfinding, movement, economy, data-driven units.
+- A Godot 4.5.1 .NET sandbox: RTS camera, selection, right-click move, debug HUD.
+- 32 unit tests, an AI-vs-AI batch runner and CI.
+
+Next up is **M1: core combat** (cover, suppression, retreat, sectors, squad combat). See [docs/09](docs/09-production-roadmap.md).
+
+![Close-up: selected IDF squads (green rings) with the Merkava and Namer ahead of the infantry](docs/images/sandbox-closeup.png)
+
+## Getting started
+
+### Play the sandbox locally
+1. Install **Godot 4.5.1 .NET** (the ".NET" download, not the standard one) and the **.NET 8 SDK**.
+2. Open `game/project.godot` in Godot, then press **F5**.
+3. Controls:
+
+   | Input | Action |
+   |---|---|
+   | WASD / arrows / screen edge | Pan |
+   | Mouse wheel | Zoom |
+   | Q / E | Rotate |
+   | Left click / drag | Select |
+   | Shift + click | Add to selection |
+   | Ctrl + A | Select all |
+   | Right click | Move |
+
+   You play IDF (blue). The Hamas AI (red) advances toward you.
+
+### Develop (locally or in Claude Code cloud sessions)
+```bash
+dotnet build OCT7.sln                                    # sim + tests + tools + game assembly
+dotnet test tests/OCT7.Sim.Tests                         # unit tests
+dotnet run --project tools/MatchRunner -- --matches 20 --verify-determinism   # AI-vs-AI batch
+godot --headless --path game -- --smoke-test 600         # run the real game headless
+```
+In Claude Code cloud sessions, `.claude/hooks/session-start.sh` installs .NET 8, Godot and the software renderers automatically, so Claude can build, test, run and **screenshot** the game. Project rules for Claude are in [CLAUDE.md](CLAUDE.md).
+
+### Repository layout
+| Path | Contents |
+|---|---|
+| `sim/` | All game rules. Pure C#, no engine references, deterministic |
+| `tests/` | xUnit tests for the sim |
+| `tools/MatchRunner/` | Headless AI-vs-AI batch runner |
+| `game/` | Godot project (presentation only) |
+| `game/data/` | All balance data (JSON) |
+| `docs/` | Game design documents (source of truth) |
 
 ## Solo V1 at a glance
 - **Mode:** 1v1 skirmish vs AI. Three difficulty levels: **Easy (Recruit) / Normal (Veteran) / Hard (Elite)**.
@@ -24,16 +71,13 @@ A squad-based tactical RTS in the Company of Heroes tradition, set in modern Mid
 - **Voices:** AI text-to-speech (TTS) in Hebrew, Gazan Arabic and Lebanese Arabic, with English subtitles. Scripts are reviewed by native speakers.
 - **Later:** cinematics, campaign, multiplayer, full rosters, second doctrine and hero per faction.
 
-## Engine recommendation
-**Godot 4 (.NET / C#)**, with all game rules in a **pure C# simulation library** that runs and tests headless.
-
-This fits a solo developer working through Claude Code:
-- Scene files are short, readable text.
-- Everything can be built and tested from the command line.
+## Engine
+**Godot 4.5.1 (.NET / C#)**, with all game rules in a **pure C# simulation library** that runs and tests headless.
+- Claude Code can build, test, run and screenshot everything in the cloud.
 - The engine is free, with an MIT license.
-- The game logic can later be ported to Unity or Unreal if a team joins.
+- The rules stay portable to Unity if a team joins later.
 
-Full rationale, project layout, tools, asset sources and licensing: [docs/08-engine-and-technology.md](docs/08-engine-and-technology.md).
+Details: [docs/08-engine-and-technology.md](docs/08-engine-and-technology.md).
 
 ## Design documents
 | # | Document | Contents |
@@ -48,8 +92,7 @@ Full rationale, project layout, tools, asset sources and licensing: [docs/08-eng
 | 05 | [Maps](docs/05-maps.md) | Map pool, layout rules, ground types |
 | 06 | [Audio, Voice & Cinematics](docs/06-audio-voice-cinematics.md) | TTS voice plan, bark system, music, cinematics roadmap |
 | 07 | [UI / UX](docs/07-ui-ux.md) | HUD, controls, overlays, localization (RTL), onboarding |
-| 08 | [Engine & Technology](docs/08-engine-and-technology.md) | Godot vs Unity for solo, architecture, tools, assets, licensing |
-| 09 | [Production Roadmap](docs/09-production-roadmap.md) | Solo milestones, budget, weekly rhythm, risks, next 30 days |
+| 08 | [Engine & Technology](docs/08-engine-and-technology.md) | Godot vs Unity for solo, architecture, cloud workflow, tools, assets, licensing |
+| 09 | [Production Roadmap](docs/09-production-roadmap.md) | Solo milestones, budget, weekly rhythm, risks, status and next steps |
 
-## Status
-Pre-production (design complete). All numbers are **initial tuning values**. They will change through balance work and automated AI-vs-AI simulation (MatchRunner).
+All numbers in the docs and `game/data/` are **initial tuning values**.

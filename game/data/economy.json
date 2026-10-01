@@ -1,0 +1,17 @@
+// Economy tuning — docs/02-core-gameplay.md §1. Initial values; tune via MatchRunner + playtests.
+{
+  "startManpower": 400,
+  "startMunitions": 40,
+  "startFuel": 15,
+  "hqManpowerPerMinute": 220,
+  "hqMunitionsPerMinute": 10,
+  "hqFuelPerMinute": 5,
+  "standardSectorManpowerPerMinute": 15,
+  "munitionsSectorPerMinute": 25,
+  "fuelSectorPerMinute": 15,
+  "outpostBonus": 0.3,
+  "popCap": 100,
+  "upkeepFreePop": 20,
+  "upkeepManpowerPerPopPerMinute": 1.5,
+  "startingTickets": 500
+}

@@ -21,27 +21,34 @@ The first draft assumed a team of about 15. For **one developer who builds mostl
 
 ## 2. Architecture
 
-### Project layout (monorepo)
+### Project layout (monorepo, as built)
 ```
 OCT7/
+├── CLAUDE.md                  # rules + commands for Claude Code sessions
+├── OCT7.sln                   # sim + tests + MatchRunner + game
+├── .claude/hooks/session-start.sh   # cloud sessions: installs .NET 8, Godot 4.5.1 .NET, Xvfb, Mesa
+├── .github/workflows/ci.yml   # format → tests → AI-vs-AI determinism → Godot import + smoke test
 ├── docs/                      # design docs (this folder)
-├── data/                      # all balance data: units, weapons, abilities, build orders (JSON/CSV)
-├── sim/                       # pure C# class library (.NET 8+) — THE GAME RULES
-│   ├── Core/                  # tick loop, command queue, seeded RNG, entity store
-│   ├── World/                 # map grid, sectors, ground types, cover nodes, LOS grid
-│   ├── Combat/                # accuracy, cover, suppression, armor, criticals, interceptors
-│   ├── Units/                 # squads, vehicles, veterancy, heroes, abilities
-│   ├── Economy/               # resources, income, upkeep, tech tiers, construction
-│   ├── Factions/              # Intel (IDF), TunnelNetwork (Hamas), RocketStockpile (Hezbollah)
-│   ├── Pathfinding/           # grid A* + flow fields + steering
-│   └── AI/                    # strategic utility AI, influence maps, squad behaviors
-├── sim.tests/                 # xUnit tests — run with `dotnet test`, no engine needed
+├── sim/                       # pure C# library (netstandard2.1, C# 9) — THE GAME RULES
+│   ├── Core/                  # Simulation (10 Hz tick), commands, command queue, seeded RNG, state hash
+│   ├── Math/                  # Vec2, GridPos
+│   ├── World/                 # map grid, ground types, obstacles, sandbox map
+│   ├── Pathfinding/           # grid A* (8-dir, no corner cutting) + path smoothing
+│   ├── Units/                 # squads, entity store, movement
+│   ├── Economy/               # player resources, income, upkeep
+│   ├── Data/                  # unit/faction/economy definitions, JSON loader, validator
+│   ├── Match/                 # match setup (any faction pairing)
+│   └── AI/                    # AI interface, placeholder AdvanceAi, shared SimLoop
+│   # next: Combat/ (accuracy, cover, suppression, armor), Factions/ (Intel, tunnels, Rocket Stockpile)
+├── tests/OCT7.Sim.Tests/      # xUnit — `dotnet test`, no engine needed
 ├── tools/
-│   └── MatchRunner/           # headless CLI: AI vs AI × N matches → win-rate report
-└── game/                      # Godot 4 .NET project — PRESENTATION ONLY
-    ├── scenes/                # maps, units, UI (.tscn)
-    ├── scripts/               # C# glue: reads sim state, renders, plays audio, sends commands
-    └── assets/                # models, textures, audio (see licensing)
+│   ├── MatchRunner/           # headless CLI: AI vs AI × N matches → JSON report + determinism check
+│   └── Shared/                # repo data loader shared by tests and tools
+└── game/                      # Godot 4.5.1 .NET project — PRESENTATION ONLY
+    ├── data/                  # ALL balance data (economy, factions, units) as JSON — loaded via res://
+    ├── scenes/main.tscn       # minimal; nodes are built in code
+    ├── scripts/               # Main (host loop), views, RTS camera, selection, HUD, screenshot tool
+    └── export_presets.cfg     # Windows + Linux presets (include data/*.json)
 ```
 
 ### Simulation rules (what makes this solo-friendly)
@@ -66,7 +73,7 @@ OCT7/
 | Audio | Godot audio buses + a simple bark manager (priority + cooldown) |
 
 ### Data pipeline
-- Balance lives in `data/` as JSON (or CSV for spreadsheets). You or Claude can edit numbers in plain text. Diffs are reviewable in Git.
+- Balance lives in `game/data/` as JSON (or CSV for spreadsheets). You or Claude can edit numbers in plain text. Diffs are reviewable in Git.
 - A validator test checks references, ranges and missing localization keys on every `dotnet test`.
 
 ## 3. What you need (solo)
@@ -128,6 +135,23 @@ OCT7/
 | Rendering | ≤ 14 ms |
 
 ## 5. Working effectively with Claude Code
+
+### Cloud workflow (verified in this repo)
+Everything below runs inside a Claude Code cloud session. The session-start hook installs the tools automatically.
+
+| Capability | Command | Status |
+|---|---|---|
+| Build sim + game | `dotnet build OCT7.sln` | ✅ |
+| Unit tests | `dotnet test tests/OCT7.Sim.Tests` | ✅ 32 tests |
+| AI-vs-AI batches + determinism | `dotnet run --project tools/MatchRunner -- --matches 20 --verify-determinism` | ✅ about 15 ms per 10-minute match |
+| Run the real game headless | `godot --headless --path game -- --smoke-test 600` | ✅ |
+| Screenshots (Forward+, software Vulkan) | `xvfb-run … godot --rendering-method forward_plus … -- --screenshot shot.png` | ✅ about 3–4 fps, fine for stills |
+| Screenshots (Compatibility, software GL) | same with `--rendering-method gl_compatibility` | ✅ |
+| Windows export | needs the about 1 GB export templates | ⏳ planned for the first playable milestone |
+
+**Not possible in the cloud:** real-time play with mouse and keyboard, and real GPU performance. You do those locally.
+
+### Habits
 1. **`CLAUDE.md` at the repo root.** Project overview, folder layout, conventions, how to run tests and MatchRunner. Future sessions start with full context.
 2. **One feature = one small task.** Ask for one system at a time (e.g., "suppression meter + tests"), referencing the design doc section.
 3. **Tests first for simulation rules.** Every rule in [02](02-core-gameplay.md) becomes a test (e.g., "heavy cover halves hit chance"). Claude runs them in the cloud.

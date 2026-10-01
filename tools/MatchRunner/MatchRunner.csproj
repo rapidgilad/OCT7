@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <RootNamespace>OCT7.Tools.MatchRunner</RootNamespace>
+    <AssemblyName>MatchRunner</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../sim/OCT7.Sim.csproj" />
+    <Compile Include="../Shared/*.cs" Link="Shared/%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

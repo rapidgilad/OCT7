@@ -1,0 +1,23 @@
+# Godot
+.godot/
+*.translation
+export_credentials.cfg
+mono_crash.*.json
+
+# .NET build output
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.idea/
+TestResults/
+
+# Exported game builds
+builds/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp

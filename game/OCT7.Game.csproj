@@ -1,0 +1,16 @@
+<Project Sdk="Godot.NET.Sdk/4.5.1">
+
+  <!-- Presentation layer only: rendering, input, UI, audio. All game rules live in ../sim. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <Nullable>disable</Nullable>
+    <RootNamespace>OCT7.Game</RootNamespace>
+    <AssemblyName>OCT7.Game</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../sim/OCT7.Sim.csproj" />
+  </ItemGroup>
+
+</Project>
