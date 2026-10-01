@@ -85,6 +85,7 @@ namespace OCT7.Game.UI
             AddButton(box, "Resume", () => _match.TogglePause());
             AddButton(box, "Surrender", () => _match.Surrender());
             AddButton(box, "Main menu", () => GetTree().ChangeSceneToFile("res://scenes/menu.tscn"));
+            box.AddChild(UiTheme.VolumeSlider());
             Visible = false;
         }
 

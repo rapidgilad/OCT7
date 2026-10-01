@@ -1,4 +1,5 @@
 using Godot;
+using OCT7.Game.Audio;
 using OCT7.Game.Match;
 using OCT7.Game.Tools;
 
@@ -26,6 +27,17 @@ namespace OCT7.Game.UI
             {
                 MatchSettings.LaunchHandled = true;
                 options = LaunchOptions.Parse(OS.GetCmdlineUserArgs());
+                if (!string.IsNullOrEmpty(options.ExportSoundsDir))
+                {
+                    string dir = options.ExportSoundsDir.StartsWith("res://") || options.ExportSoundsDir.StartsWith("user://")
+                        ? ProjectSettings.GlobalizePath(options.ExportSoundsDir)
+                        : options.ExportSoundsDir;
+                    int count = SoundBank.ExportWavs(dir);
+                    GD.Print($"[audio] exported {count} sounds to {dir}");
+                    GetTree().Quit(count > 0 ? 0 : 1);
+                    return;
+                }
+
                 if (options.SkipMenu)
                 {
                     options.ApplyTo();
@@ -35,6 +47,7 @@ namespace OCT7.Game.UI
                 }
             }
 
+            GameAudio.Initialize();
             Theme = UiTheme.Create();
             SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
             AddChild(new ColorRect { Color = new Color(0.09f, 0.1f, 0.08f), AnchorRight = 1f, AnchorBottom = 1f, MouseFilter = MouseFilterEnum.Ignore });
@@ -61,6 +74,9 @@ namespace OCT7.Game.UI
             _enemy = Option(box, "Enemy faction", FactionNames, System.Array.IndexOf(FactionIds, MatchSettings.EnemyFaction));
             _difficulty = Option(box, "AI difficulty", DifficultyNames, System.Array.IndexOf(DifficultyIds, MatchSettings.Difficulty));
 
+            box.AddChild(UiTheme.VolumeSlider());
+            AddSoundTest(box);
+
             box.AddChild(new Control { CustomMinimumSize = new Vector2(0f, 10f) });
             var start = new Button { Text = "START SKIRMISH", CustomMinimumSize = new Vector2(0f, 50f), FocusMode = FocusModeEnum.None };
             start.AddThemeFontSizeOverride("font_size", 18);
@@ -78,6 +94,36 @@ namespace OCT7.Game.UI
             if (!string.IsNullOrEmpty(options?.ScreenshotPath))
             {
                 AddChild(new ScreenshotTool(options.ScreenshotPath, options.ScreenshotAfterFrames) { Name = "Screenshot" });
+            }
+        }
+
+        /// <summary>One button per sound effect, played non-positionally so you can hear each one in isolation.</summary>
+        private void AddSoundTest(VBoxContainer box)
+        {
+            var player = new AudioStreamPlayer { Name = "SoundTest" };
+            AddChild(player);
+            box.AddChild(UiTheme.Label("Sound test", 13, UiTheme.Dim));
+            var row = new HBoxContainer();
+            row.AddThemeConstantOverride("separation", 4);
+            box.AddChild(row);
+            var names = new[] { "Rifle", "MG", "Sniper", "Cannon", "RPG", "Boom" };
+            int pressed = 0;
+            for (int i = 0; i < SoundBank.All.Length; i++)
+            {
+                var id = SoundBank.All[i];
+                var button = new Button
+                {
+                    Text = names[i],
+                    TooltipText = SoundBank.IsOverridden(id) ? "Recording from assets/audio" : "Synthesized",
+                    SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                    FocusMode = FocusModeEnum.None,
+                };
+                button.Pressed += () =>
+                {
+                    player.Stream = SoundBank.Get(id, pressed++);
+                    player.Play();
+                };
+                row.AddChild(button);
             }
         }
 

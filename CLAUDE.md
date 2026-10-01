@@ -50,7 +50,10 @@ Launch options after `--` (any match option skips the menu; the menu reads them 
   - `--select-all`: start with all your squads selected.
 - Screenshots:
   - `--menu`: show the main menu even with other options (menu screenshots).
-  - `--screenshot PATH`, `--after-frames N`: save a frame and quit.
+  - `--screenshot PATH`, `--after-frames N`: save a frame and quit. The run also prints `[audio] played …` counts on exit.
+- Audio:
+  - `--export-sounds DIR`: write the synthesized SFX (`game/scripts/Audio/SoundSynth.cs`) as WAV files and quit. Works headless.
+  - Recordings in `game/assets/audio/{rifle,machine_gun,sniper,cannon,rocket_launch,explosion}.wav|.ogg` override them. Audio files go through Git LFS.
 
 ## Golden rules
 1. **Sim/presentation split.** Gameplay logic goes in `sim/`. `game/` reads sim state, interpolates, renders, and sends **commands**. It never mutates sim state directly.

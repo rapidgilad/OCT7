@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using OCT7.Game.Audio;
 using OCT7.Game.Input;
 using OCT7.Game.Tools;
 using OCT7.Game.UI;
@@ -30,6 +31,7 @@ namespace OCT7.Game.Match
         private SectorView _sectorView;
         private GroundOverlays _overlays;
         private VfxManager _vfx;
+        private AudioManager _audio;
         private PauseMenu _pauseMenu;
         private EndScreen _endScreen;
         private bool _endShown;
@@ -186,6 +188,7 @@ namespace OCT7.Game.Match
             {
                 Views.OnEvent(Sim, e);
                 _vfx.OnEvent(e);
+                _audio.OnEvent(e);
                 Hud.OnEvent(e);
             }
 
@@ -239,6 +242,17 @@ namespace OCT7.Game.Match
             _vfx = new VfxManager { Name = "Vfx", LocalPlayerId = LocalPlayerId, RevealAll = _revealAll };
             AddChild(_vfx);
             _vfx.Initialize(Sim, Views);
+
+            GameAudio.Initialize();
+            _audio = new AudioManager
+            {
+                Name = "Audio",
+                LocalPlayerId = LocalPlayerId,
+                RevealAll = _revealAll,
+                LogStats = !string.IsNullOrEmpty(_options.ScreenshotPath),
+            };
+            AddChild(_audio);
+            _audio.Initialize(Sim);
 
             CameraRig = new RtsCamera { Name = "CameraRig", EdgePanEnabled = string.IsNullOrEmpty(_options.ScreenshotPath) };
             AddChild(CameraRig);

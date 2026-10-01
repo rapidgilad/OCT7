@@ -82,5 +82,33 @@ namespace OCT7.Game.UI
             bar.AddThemeStyleboxOverride("background", Box(new Color(0f, 0f, 0f, 0.55f), 2, 0));
             return bar;
         }
+
+        /// <summary>"Volume" label + slider bound to the saved master volume.</summary>
+        public static HBoxContainer VolumeSlider()
+        {
+            var row = new HBoxContainer();
+            row.AddThemeConstantOverride("separation", 10);
+            row.AddChild(Label("Volume", 13, Dim));
+            var value = Label("", 13, Text);
+            var slider = new HSlider
+            {
+                MinValue = 0,
+                MaxValue = 100,
+                Step = 1,
+                Value = Mathf.Round(Audio.GameAudio.Volume * 100f),
+                SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+                SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
+                FocusMode = Control.FocusModeEnum.None,
+            };
+            value.Text = $"{(int)slider.Value}%";
+            slider.ValueChanged += v =>
+            {
+                Audio.GameAudio.Volume = (float)v / 100f;
+                value.Text = $"{(int)v}%";
+            };
+            row.AddChild(slider);
+            row.AddChild(value);
+            return row;
+        }
     }
 }

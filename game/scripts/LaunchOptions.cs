@@ -56,6 +56,9 @@ namespace OCT7.Game
         /// <summary>Show the main menu even when other options would skip it (menu screenshots).</summary>
         public bool ForceMenu { get; private set; }
 
+        /// <summary>Write the synthesized sound effects as WAV files to this directory and quit.</summary>
+        public string ExportSoundsDir { get; private set; }
+
         public string ScreenshotPath { get; private set; }
         public int ScreenshotAfterFrames { get; private set; } = 60;
 
@@ -77,6 +80,7 @@ namespace OCT7.Game
                     case "--map": o.MapId = Next(); o.Quick = true; break;
                     case "--quick": o.Quick = true; break;
                     case "--menu": o.ForceMenu = true; break;
+                    case "--export-sounds": o.ExportSoundsDir = Next(); break;
                     case "--smoke-test": o.SmokeTestTicks = int.Parse(Next(), CultureInfo.InvariantCulture); break;
                     case "--full-match": o.FullMatch = true; break;
                     case "--demo": o.Demo = true; break;

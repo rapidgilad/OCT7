@@ -18,7 +18,8 @@ A squad-based tactical RTS in the Company of Heroes tradition, set in modern Mid
 - **Combat model:** CoH-style:
   - Accuracy by range band and directional cover, both automatic (building and wall edges) and engineer sandbags.
   - Suppression and pinning, retreat and reinforce, vehicle front and rear armor, fog of war with line of sight.
-- **Art:** rough procedural low-poly models with procedural animation, tracers, explosions and smoke. No audio yet.
+- **Art:** rough procedural low-poly models with procedural animation, tracers, explosions and smoke.
+- **Sound:** basic positional battle sounds synthesized in code: rifles, machine guns, snipers, cannons, rocket launches and explosions. There's a sound test and a volume slider in the main menu; see [Test the sounds](#test-the-sounds).
 - **Under the hood:** a deterministic C# simulation, 93 unit tests, and an AI-vs-AI MatchRunner that verifies determinism across all 9 matchups. CI runs a full headless match in the real game.
 
 Next: playtesting, a balance pass, then the signature systems (tunnels, Iron Dome, Trophy, Intel), veterancy, heroes and doctrines. See [docs/09](docs/09-production-roadmap.md).
@@ -53,6 +54,22 @@ Next: playtesting, a balance pass, then the signature systems (tunnels, Iron Dom
 
    The cursor preview shows cover at the destination: **green** heavy, **yellow** light, **red** open.
 
+### Test the sounds
+1. **Sound test.**
+   - Launch the game (F5). In the main menu, click **Rifle, MG, Sniper, Cannon, RPG, Boom** under *Sound test*.
+   - Each click plays the next variant: rifles and MGs have 4, the others 2–3.
+   - Adjust **Volume** if needed. The setting is saved.
+2. **In a match.**
+   - Start a skirmish and move your riflemen toward the enemy. Sounds play only for fights you can see.
+   - Sounds are positional: louder near the screen center, panned left/right, and quieter as you zoom out.
+3. **Watch the AI fight** without playing.
+   - Command line: `godot --path game -- --demo --fast-forward 6000 --focus-army`. The AI plays both sides, and the camera opens on a firefight about 10 minutes in.
+   - From the editor: **Debug → Customize Run Instances… → Main Run Args**, enter `--demo --fast-forward 6000 --focus-army`, then press F5.
+   - For tanks, RPGs and explosions, use `--p0 hamas --p1 idf --fast-forward 9600`.
+4. **Listen outside the game.**
+   - Run `godot --headless --path game -- --export-sounds ~/oct7-sounds`. It writes every variant as a WAV (e.g. `rifle_1.wav`, `explosion_3.wav`) for any audio player.
+5. **Swap in real recordings.** Put `rifle.wav`, `machine_gun.wav`, `sniper.wav`, `cannon.wav`, `rocket_launch.wav` or `explosion.wav` (or `.ogg`) into `game/assets/audio/`. Let the Godot editor import them and they replace the synthesized sounds. The tooltip on each sound-test button says which one is active.
+
 ### Develop (locally or in Claude Code cloud sessions)
 ```bash
 dotnet build OCT7.sln                                    # sim + tests + tools + game assembly
@@ -60,6 +77,7 @@ dotnet test tests/OCT7.Sim.Tests                         # unit tests
 dotnet run --project tools/MatchRunner -- --matches 20 --verify-determinism   # AI-vs-AI batch
 godot --headless --path game -- --smoke-test 600         # run the real game headless
 godot --headless --path game -- --smoke-test 30000 --full-match   # full AI-vs-AI match, must end in a victory
+godot --headless --path game -- --export-sounds /tmp/sounds        # write the synthesized SFX as WAV files
 ```
 In Claude Code cloud sessions, `.claude/hooks/session-start.sh` installs .NET 8, Godot and the software renderers automatically, so Claude can build, test, run and **screenshot** the game. Project rules for Claude are in [CLAUDE.md](CLAUDE.md).
 

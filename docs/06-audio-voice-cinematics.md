@@ -68,6 +68,15 @@ An English dub is a V2 option. Native languages are the V1 default for authentic
   - IDF: modern orchestral with percussion.
   - Hamas and Hezbollah: regional instruments (oud, ney, darbuka) blended with a cinematic orchestral base.
 - **Weapon SFX:** authentic recordings or licensed libraries, with near/mid/far layers, an indoor/outdoor reverb split and tail occlusion.
+- **Status (v0.1): placeholder SFX are synthesized in code.**
+  - **Where:** `game/scripts/Audio/SoundSynth.cs`.
+  - **Sounds:** rifle, machine gun, sniper, cannon (tank gun; the autocannon uses it pitched up), rocket launch and explosion. Each has 2–4 variants plus random pitch and volume per shot.
+  - **Playback:** `AudioManager` plays them positionally from sim events, heard from the camera.
+    - Rocket and shell impacts are delayed to match the VFX.
+    - Vehicles and buildings explode when destroyed.
+    - Only fights the local player can see make sound, and starts per frame are capped.
+  - **Replacing them:** drop a recording into `game/assets/audio/` (see the README there) and it replaces the synthesized sound with no code change.
+  - **Volume:** the slider in the main and pause menus is saved to `user://settings.cfg`.
 - **Gameplay-critical audio cues:**
 
   | Cue | Meaning |
