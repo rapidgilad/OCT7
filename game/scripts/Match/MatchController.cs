@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 using OCT7.Game.Audio;
 using OCT7.Game.Input;
@@ -35,6 +36,8 @@ namespace OCT7.Game.Match
         private PauseMenu _pauseMenu;
         private EndScreen _endScreen;
         private bool _endShown;
+        private float _vfxTestTimer;
+        private int _vfxTestStep;
 
         // End-screen statistics, counted from sim events.
         private int _fielded;
@@ -72,7 +75,10 @@ namespace OCT7.Game.Match
                 GD.PushError($"[data] {error}");
             }
 
-            Sim = MatchSetup.CreateSkirmish(data, MatchSettings.PlayerFaction, MatchSettings.EnemyFaction, MatchSettings.Seed, MatchSettings.MapId);
+            bool showcase = !string.IsNullOrEmpty(MatchSettings.Showcase);
+            Sim = showcase
+                ? MatchSetup.CreateShowcase(data, MatchSettings.Showcase == "all" ? new[] { "idf", "hamas", "hezbollah" } : new[] { MatchSettings.Showcase })
+                : MatchSetup.CreateSkirmish(data, MatchSettings.PlayerFaction, MatchSettings.EnemyFaction, MatchSettings.Seed, MatchSettings.MapId);
             foreach (var s in Sim.World.Squads)
             {
                 if (s.OwnerId == LocalPlayerId)
@@ -80,12 +86,15 @@ namespace OCT7.Game.Match
                     _fielded++; // starting squads count as fielded
                 }
             }
-            if (AiControlsLocalPlayer)
+            if (AiControlsLocalPlayer && !showcase)
             {
                 _ais.Add(SkirmishAi.Create(Sim, LocalPlayerId, MatchSettings.Difficulty));
             }
 
-            _ais.Add(SkirmishAi.Create(Sim, 1, MatchSettings.Difficulty));
+            if (!showcase)
+            {
+                _ais.Add(SkirmishAi.Create(Sim, 1, MatchSettings.Difficulty));
+            }
 
             if (_options.SmokeTestTicks > 0)
             {
@@ -108,7 +117,7 @@ namespace OCT7.Game.Match
                 CountStats();
             }
 
-            _revealAll = MatchSettings.Demo && !_options.Fog;
+            _revealAll = (MatchSettings.Demo && !_options.Fog) || showcase;
             InputSetup.EnsureActions();
             BuildWorld();
         }
@@ -180,12 +189,27 @@ namespace OCT7.Game.Match
             {
                 ShowEndScreen();
             }
+
+            if (_options.VfxTest)
+            {
+                _vfxTestTimer -= (float)delta;
+                if (_vfxTestTimer <= 0f)
+                {
+                    _vfxTestTimer = 0.9f;
+                    _vfx.PlaySample(_vfxTestStep++, CameraRig.Focus + new Vector3(0f, 0.5f, 6f));
+                }
+            }
         }
 
         private void DispatchEvents()
         {
             foreach (var e in Sim.Events)
             {
+                if (e.Type == SimEventType.StructurePlaced)
+                {
+                    ClearVegetation(Sim.World.GetStructure(e.TargetId));
+                }
+
                 Views.OnEvent(Sim, e);
                 _vfx.OnEvent(e);
                 _audio.OnEvent(e);
@@ -227,6 +251,10 @@ namespace OCT7.Game.Match
             _mapView = new MapView { Name = "Map" };
             AddChild(_mapView);
             _mapView.Build(Sim.Map);
+            foreach (var st in Sim.World.Structures)
+            {
+                ClearVegetation(st);
+            }
 
             _overlays = new GroundOverlays { Name = "Overlays", LocalPlayerId = LocalPlayerId, FogEnabled = !_revealAll };
             AddChild(_overlays);
@@ -258,6 +286,11 @@ namespace OCT7.Game.Match
             AddChild(CameraRig);
             CameraRig.SetBounds(Sim.Map.Grid.WorldWidth, Sim.Map.Grid.WorldHeight);
             PlaceCamera();
+            if (_options.LookAt.HasValue || _options.CameraYaw.HasValue)
+            {
+                var look = _options.LookAt ?? new Vector2(CameraRig.Focus.X, CameraRig.Focus.Z);
+                CameraRig.SetView(new Vector3(look.X, 0f, look.Y), _options.CameraDistance > 0f ? _options.CameraDistance : CameraRig.Distance, _options.CameraYaw ?? CameraRig.YawDegrees);
+            }
 
             Player = new PlayerController { Name = "Player" };
             AddChild(Player);
@@ -278,10 +311,7 @@ namespace OCT7.Game.Match
             _endScreen = new EndScreen { Name = "EndScreen" };
             ui.AddChild(_endScreen);
 
-            if (_options.SelectAllOnStart)
-            {
-                Player.SelectAllOwn();
-            }
+            ApplyInitialSelection();
 
             if (!string.IsNullOrEmpty(_options.ScreenshotPath))
             {
@@ -296,10 +326,66 @@ namespace OCT7.Game.Match
             Views.Sync(Sim, 1f, Player.SelectedSquads, Player.SelectedStructure, 0f);
         }
 
+        private void ClearVegetation(OCT7.Sim.Production.Structure st)
+        {
+            if (st == null)
+            {
+                return;
+            }
+
+            var min = new Vec2(st.MinCell.X * st.CellSize - 1f, st.MinCell.Y * st.CellSize - 1f);
+            var max = new Vec2((st.MinCell.X + st.SizeX) * st.CellSize + 1f, (st.MinCell.Y + st.SizeY) * st.CellSize + 1f);
+            _mapView.ClearArea(min, max);
+        }
+
+        private void ApplyInitialSelection()
+        {
+            switch (_options.Select)
+            {
+                case "all":
+                    Player.SelectAllOwn();
+                    break;
+                case "one":
+                    var first = Sim.World.Squads.FirstOrDefault(s => s.OwnerId == LocalPlayerId && !s.Def.Engineer);
+                    if (first != null)
+                    {
+                        Player.SelectSquads(new[] { first.Id });
+                    }
+
+                    break;
+                case "hq":
+                    var hq = Sim.World.FindHq(LocalPlayerId);
+                    if (hq != null)
+                    {
+                        Player.SelectStructure(hq.Id);
+                    }
+
+                    break;
+                case "build":
+                    Player.SelectSquads(Sim.World.Squads.Where(s => s.OwnerId == LocalPlayerId && s.Def.Engineer).Select(s => s.Id));
+                    CallDeferred(MethodName.OpenBuildMenu);
+                    break;
+            }
+        }
+
+        private void OpenBuildMenu()
+        {
+            Hud._Process(0);
+            Hud.HandleHotkey(Godot.Key.B);
+        }
+
         private void PlaceCamera()
         {
             var grid = Sim.Map.Grid;
             var center = new Vec2(grid.WorldWidth * 0.5f, grid.WorldHeight * 0.5f);
+            if (Sim.Map.Id == "showcase" && !_options.Overview)
+            {
+                // Look at the first band from the front: units (facing +Y) toward the camera, structures behind them.
+                float d = _options.CameraDistance > 0f ? _options.CameraDistance : 85f;
+                CameraRig.SetView(new Vector3(center.X, 0f, 54f), d, 0f);
+                return;
+            }
+
             if (_options.Overview)
             {
                 CameraRig.SetView(new Vector3(center.X, 0f, center.Y), 230f, YawToward(Sim.GetPlayer(LocalPlayerId).HqPosition, center));

@@ -115,7 +115,7 @@ namespace OCT7.Game.UI
             // Camera frame: project the screen corners to the ground.
             var cam = _match.CameraRig;
             var vp = GetViewport().GetVisibleRect().Size;
-            var corners = new[] { new Vector2(0f, 44f), new Vector2(vp.X, 44f), new Vector2(vp.X, vp.Y - 206f), new Vector2(0f, vp.Y - 206f) };
+            var corners = new[] { new Vector2(0f, 0f), new Vector2(vp.X, 0f), new Vector2(vp.X, vp.Y), new Vector2(0f, vp.Y) };
             var pts = new Vector2[5];
             bool ok = true;
             for (int i = 0; i < 4; i++)

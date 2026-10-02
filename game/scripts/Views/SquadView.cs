@@ -152,7 +152,7 @@ namespace OCT7.Game.Views
                 if (_reviveTimers[i] > 0f)
                 {
                     _reviveTimers[i] = Mathf.Max(0f, _reviveTimers[i] - delta);
-                    rig.Root.Scale = Vector3.One * 1.12f * (1f - _reviveTimers[i] / 0.5f);
+                    rig.Root.Scale = Vector3.One * rig.BaseScale * (1f - _reviveTimers[i] / 0.5f);
                 }
 
                 float phase = _walkPhase + i * 1.3f;
@@ -247,7 +247,7 @@ namespace OCT7.Game.Views
             }
 
             var rig = _soldiers[i];
-            return rig.Root.ToGlobal(rig.Muzzle / 1.12f);
+            return rig.Root.ToGlobal(rig.Muzzle);
         }
 
         public int SoldierCount => _soldiers.Count;

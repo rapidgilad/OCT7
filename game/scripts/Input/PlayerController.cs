@@ -91,6 +91,23 @@ namespace OCT7.Game.Input
             Changed();
         }
 
+        /// <summary>Replaces the selection with these own squads (HUD selection chips).</summary>
+        public void SelectSquads(IEnumerable<int> ids)
+        {
+            _squads.Clear();
+            SelectedStructure = 0;
+            foreach (var id in ids)
+            {
+                var s = Sim.World.GetSquad(id);
+                if (s != null && s.OwnerId == Me)
+                {
+                    _squads.Add(id);
+                }
+            }
+
+            Changed();
+        }
+
         public void SelectStructure(int id)
         {
             _squads.Clear();

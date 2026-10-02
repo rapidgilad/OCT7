@@ -12,6 +12,9 @@ namespace OCT7.Game.Match
         /// <summary>AI plays both sides; the camera spectates with fog of war disabled.</summary>
         public static bool Demo;
 
+        /// <summary>Art gallery mode ("idf", "hamas", "hezbollah" or "all"); null for a normal match.</summary>
+        public static string Showcase;
+
         /// <summary>True once the command line has been read, so returning to the menu doesn't re-launch the same match.</summary>
         public static bool LaunchHandled;
 

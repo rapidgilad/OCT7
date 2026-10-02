@@ -18,7 +18,12 @@ A squad-based tactical RTS in the Company of Heroes tradition, set in modern Mid
 - **Combat model:** CoH-style:
   - Accuracy by range band and directional cover, both automatic (building and wall edges) and engineer sandbags.
   - Suppression and pinning, retreat and reinforce, vehicle front and rear armor, fog of war with line of sight.
-- **Art:** rough procedural low-poly models with procedural animation, tracers, explosions and smoke.
+- **Art:** procedural low-poly models in a faceted style, with procedural animation.
+  - Each faction has its own building set (IDF containers and T-walls, Hamas concrete and rebar, Hezbollah limestone, earth berms and tunnels).
+  - Units have role-specific gear: engineers' packs, MG bipods, sniper ghillies, AT launchers and spare rockets.
+  - Effects include smoke, fireballs, debris, scorch marks and tracers.
+  - The map has olive trees, cypresses, palms and grass.
+  - The HUD is compact, with icon command cards.
 - **Sound:** basic positional battle sounds synthesized in code: rifles, machine guns, snipers, cannons, rocket launches and explosions. There's a sound test and a volume slider in the main menu; see [Test the sounds](#test-the-sounds).
 - **Under the hood:** a deterministic C# simulation, 93 unit tests, and an AI-vs-AI MatchRunner that verifies determinism across all 9 matchups. CI runs a full headless match in the real game.
 
@@ -28,6 +33,12 @@ Next: playtesting, a balance pass, then the signature systems (tunnels, Iron Dom
 |---|---|
 | ![Main menu](docs/images/v01-menu.png) | ![Opening: HQ, engineers and riflemen, HUD, minimap and command card](docs/images/v01-base.png) |
 | ![Overview with fog of war and sector borders](docs/images/v01-overview-fog.png) | ![End screen](docs/images/v01-end.png) |
+
+Every faction has its own building and unit designs. These shots come from the art gallery, launched with `--showcase all`:
+
+| IDF | Hamas | Hezbollah |
+|---|---|---|
+| ![IDF structures and units](docs/images/gallery-idf.png) | ![Hamas structures and units](docs/images/gallery-hamas.png) | ![Hezbollah structures and units](docs/images/gallery-hezbollah.png) |
 
 ## Getting started
 

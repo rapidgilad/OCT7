@@ -211,3 +211,35 @@ namespace OCT7.Sim.Tests
         }
     }
 }
+
+namespace OCT7.Sim.Tests
+{
+    public class ShowcaseTests
+    {
+        [Fact]
+        public void Showcase_HasEveryEnabledUnitAndStructure_ForAllFactions()
+        {
+            var data = TestMatch.Data;
+            var factions = new[] { "idf", "hamas", "hezbollah" };
+            var sim = MatchSetup.CreateShowcase(data, factions);
+            for (int i = 0; i < factions.Length; i++)
+            {
+                var units = data.UnitsOfFaction(factions[i]).Where(u => u.Enabled).Select(u => u.Id).OrderBy(id => id);
+                var spawned = sim.World.Squads.Where(s => s.OwnerId == i).Select(s => s.Def.Id).OrderBy(id => id);
+                Assert.Equal(units, spawned);
+
+                int expectedStructures = 1 + data.BuildableStructures(factions[i]).Count;
+                Assert.Equal(expectedStructures, sim.World.Structures.Count(s => s.OwnerId == i && s.IsComplete));
+            }
+
+            // Bands are out of sight of each other: nothing fights without commands.
+            for (int t = 0; t < 100; t++)
+            {
+                sim.Step();
+                Assert.DoesNotContain(sim.Events, e => e.Type == SimEventType.ShotFired);
+            }
+
+            Assert.False(sim.IsOver);
+        }
+    }
+}

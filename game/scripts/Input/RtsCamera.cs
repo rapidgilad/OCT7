@@ -22,6 +22,9 @@ namespace OCT7.Game.Input
         private float _boundsZ = 256f;
 
         public Camera3D Camera { get; private set; }
+        public Vector3 Focus => _focus;
+        public float Distance => _targetDistance;
+        public float YawDegrees => _yawDegrees;
 
         /// <summary>Disabled for automated screenshots (the virtual mouse would otherwise pan the camera).</summary>
         public bool EdgePanEnabled { get; set; } = true;

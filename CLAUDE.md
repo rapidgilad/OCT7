@@ -47,7 +47,11 @@ Launch options after `--` (any match option skips the menu; the menu reads them 
   - `--overview`: frame the whole map.
   - `--focus-army`: center on the nearest fight.
   - `--distance M`: initial camera distance.
-  - `--select-all`: start with all your squads selected.
+  - `--look X,Z`, `--yaw DEG`: initial camera focus and rotation.
+  - `--select all|one|hq|build` (`--select-all` = `all`): initial selection, to show the HUD's selection and command cards.
+- Art review:
+  - `--showcase idf|hamas|hezbollah|all`: a gallery instead of a match (`MatchSetup.CreateShowcase`). Each faction gets a band with every structure, every unit in front, and obstacle and vegetation samples. Bands are 76 m apart; for band i use `--look 54,<54+76*i> --distance 66`.
+  - `--vfx-test`: loops sample explosions, fire, tracers and rockets in front of the camera. Effects advance at most 1/30 s per rendered frame, so take software-rendered shots after 25 or more frames.
 - Screenshots:
   - `--menu`: show the main menu even with other options (menu screenshots).
   - `--screenshot PATH`, `--after-frames N`: save a frame and quit. The run also prints `[audio] played …` counts on exit.
@@ -76,4 +80,8 @@ v0.1, the first playable skirmish, is done. Next:
 3. Veterancy, heroes and doctrines.
 4. The deferred units.
 
-Each step: sim + tests first, then visuals, then a screenshot check. Procedural models live in `game/scripts/Visual/`; a `res://assets/models/{id}.glb` overrides a vehicle or structure model.
+Each step: sim + tests first, then visuals, then a screenshot check.
+
+Visuals:
+- Procedural models live in `game/scripts/Visual/`: `SoldierModels`, `VehicleModels`, `StructureModels` (one design per structure id), `NatureModels`, `MeshKit`, and `Textures` (procedural world-triplanar detail textures).
+- A `res://assets/models/{id}.glb` overrides a vehicle or structure model.

@@ -67,6 +67,126 @@ namespace OCT7.Game.Visual
             return m;
         }
 
+        /// <summary>Lit material with a procedural detail texture in world-space triplanar mapping (no UVs needed).</summary>
+        public static StandardMaterial3D TexMat(Color c, Tex tex, float roughness = 0.9f)
+        {
+            if (tex == Tex.None)
+            {
+                return Mat(c, roughness);
+            }
+
+            string key = $"t{c.ToHtml()}{tex}{roughness:0.00}";
+            if (!Materials.TryGetValue(key, out var m))
+            {
+                float scale = 1f / Textures.Scale(tex);
+                m = new StandardMaterial3D
+                {
+                    AlbedoColor = c,
+                    AlbedoTexture = Textures.Get(tex),
+                    Roughness = roughness,
+                    Uv1Triplanar = true,
+                    Uv1WorldTriplanar = true,
+                    Uv1Scale = new Vector3(scale, scale, scale),
+                    TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic,
+                };
+                Materials[key] = m;
+            }
+
+            return m;
+        }
+
+        /// <summary>Like <see cref="TexMat"/> but in object space, so the texture moves with the model (units, vehicles).</summary>
+        public static StandardMaterial3D TexMatLocal(Color c, Tex tex, float metersPerRepeat, float roughness = 0.85f)
+        {
+            string key = $"tl{c.ToHtml()}{tex}{metersPerRepeat:0.00}{roughness:0.00}";
+            if (!Materials.TryGetValue(key, out var m))
+            {
+                float scale = 1f / metersPerRepeat;
+                m = new StandardMaterial3D
+                {
+                    AlbedoColor = c,
+                    AlbedoTexture = Textures.Get(tex),
+                    Roughness = roughness,
+                    Uv1Triplanar = true,
+                    Uv1WorldTriplanar = false,
+                    Uv1Scale = new Vector3(scale, scale, scale),
+                    TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmaps,
+                };
+                Materials[key] = m;
+            }
+
+            return m;
+        }
+
+        public static MeshInstance3D BoxT(Node3D parent, Vector3 size, Vector3 pos, Color c, Tex tex, Vector3? rotDeg = null) =>
+            Add(parent, BoxMesh(size), pos, TexMat(c, tex), rotDeg);
+
+        public static MeshInstance3D PrismT(Node3D parent, Vector3 size, Vector3 pos, Color c, Tex tex, Vector3? rotDeg = null) =>
+            Add(parent, PrismMesh(size, 0.5f), pos, TexMat(c, tex), rotDeg);
+
+        public static MeshInstance3D CylT(Node3D parent, float rTop, float rBottom, float h, Vector3 pos, Color c, Tex tex, Vector3? rotDeg = null, int seg = 12) =>
+            Add(parent, CylMesh(rTop, rBottom, h, seg), pos, TexMat(c, tex), rotDeg);
+
+        /// <summary>A child node at <paramref name="pos"/> rotated by <paramref name="yawDeg"/>, for placing multi-part props.</summary>
+        public static Node3D Group(Node3D parent, Vector3 pos, float yawDeg = 0f)
+        {
+            var g = new Node3D { Position = pos, RotationDegrees = new Vector3(0f, yawDeg, 0f) };
+            parent.AddChild(g);
+            return g;
+        }
+
+        /// <summary>A cylinder spanning two points (braces, guy wires, ladder rails, pipes).</summary>
+        public static MeshInstance3D Beam(Node3D parent, Vector3 from, Vector3 to, float radius, Color c, int seg = 5)
+        {
+            var dir = to - from;
+            float len = dir.Length();
+            var up = len > 1e-5f ? dir / len : Vector3.Up;
+            var axis = Vector3.Up.Cross(up);
+            var basis = axis.LengthSquared() < 1e-8f
+                ? (up.Y < 0f ? new Basis(Vector3.Right, Mathf.Pi) : Basis.Identity)
+                : new Basis(axis.Normalized(), Mathf.Acos(Mathf.Clamp(Vector3.Up.Dot(up), -1f, 1f)));
+            var mi = new MeshInstance3D { Mesh = CylMesh(radius, radius, len, seg), MaterialOverride = Mat(c) };
+            mi.Transform = new Transform3D(basis, (from + to) * 0.5f);
+            parent.AddChild(mi);
+            return mi;
+        }
+
+        public static MeshInstance3D Tire(Node3D parent, Vector3 pos, float radius, Vector3? rotDeg = null) =>
+            Add(parent, Cached($"tire{radius:0.00}", () => new TorusMesh { InnerRadius = radius * 0.5f, OuterRadius = radius, Rings = 12, RingSegments = 6 }), pos, Mat(new Color(0.09f, 0.09f, 0.09f), 0.95f), rotDeg);
+
+        /// <summary>
+        /// Low-poly faceted blob (rocks, earth mounds, foliage): a coarse sphere with per-vertex radial noise and flat
+        /// normals. Seams are displaced consistently because the noise is keyed on the vertex direction.
+        /// </summary>
+        public static Mesh FacetedMesh(int seed, float roughness = 0.22f, int segments = 7) =>
+            Cached($"fac{seed}{roughness:0.00}{segments}", () =>
+            {
+                var sphere = new SphereMesh { Radius = 1f, Height = 2f, RadialSegments = segments, Rings = System.Math.Max(3, segments / 2 + 1) };
+                var arrays = sphere.GetMeshArrays();
+                var verts = arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();
+                var index = arrays[(int)Mesh.ArrayType.Index].AsInt32Array();
+                var st = new SurfaceTool();
+                st.Begin(Mesh.PrimitiveType.Triangles);
+                st.SetSmoothGroup(uint.MaxValue);
+                foreach (int i in index)
+                {
+                    var v = verts[i];
+                    int hx = Mathf.RoundToInt(v.X * 100f), hy = Mathf.RoundToInt(v.Y * 100f), hz = Mathf.RoundToInt(v.Z * 100f);
+                    float n = Hash01(hx * 31 + hz * 7 + seed * 977, hy * 13 + seed);
+                    st.AddVertex(v * (1f - roughness * 0.5f + n * roughness));
+                }
+
+                st.GenerateNormals();
+                return st.Commit();
+            });
+
+        public static MeshInstance3D Faceted(Node3D parent, float radius, Vector3 pos, Color c, int seed, Vector3? scale = null, Tex tex = Tex.None, float roughness = 0.22f, int segments = 7)
+        {
+            var mi = Add(parent, FacetedMesh(seed % 16, roughness, segments), pos, TexMat(c, tex), new Vector3(0f, Hash01(seed, 77) * 360f, 0f));
+            mi.Scale = (scale ?? Vector3.One) * radius;
+            return mi;
+        }
+
         public static Mesh BoxMesh(Vector3 size) => Cached($"box{size}", () => new BoxMesh { Size = size });
 
         public static Mesh CylMesh(float top, float bottom, float h, int seg) =>

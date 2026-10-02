@@ -50,11 +50,23 @@ namespace OCT7.Game
         /// <summary>Initial camera distance in meters (0 = default). Handy for close-up screenshots.</summary>
         public float CameraDistance { get; private set; }
 
-        /// <summary>Select all local squads on start (shows selection visuals in screenshots).</summary>
-        public bool SelectAllOnStart { get; private set; }
+        /// <summary>Initial camera focus "x,z" in meters (overrides the default framing).</summary>
+        public Vector2? LookAt { get; private set; }
+
+        /// <summary>Initial camera yaw in degrees (0 = looking toward -Z).</summary>
+        public float? CameraYaw { get; private set; }
+
+        /// <summary>Initial selection for screenshots: "all" squads, "one" squad, "hq" (production card) or "build" (engineers' build menu).</summary>
+        public string Select { get; private set; }
 
         /// <summary>Show the main menu even when other options would skip it (menu screenshots).</summary>
         public bool ForceMenu { get; private set; }
+
+        /// <summary>Art gallery instead of a match: "idf", "hamas", "hezbollah" or "all" (see MatchSetup.CreateShowcase).</summary>
+        public string Showcase { get; private set; }
+
+        /// <summary>Play sample explosions, fire, tracers and rockets in front of the camera (effects review).</summary>
+        public bool VfxTest { get; private set; }
 
         /// <summary>Write the synthesized sound effects as WAV files to this directory and quit.</summary>
         public string ExportSoundsDir { get; private set; }
@@ -81,6 +93,8 @@ namespace OCT7.Game
                     case "--quick": o.Quick = true; break;
                     case "--menu": o.ForceMenu = true; break;
                     case "--export-sounds": o.ExportSoundsDir = Next(); break;
+                    case "--vfx-test": o.VfxTest = true; break;
+                    case "--showcase": o.Showcase = Next(); o.Quick = true; break;
                     case "--smoke-test": o.SmokeTestTicks = int.Parse(Next(), CultureInfo.InvariantCulture); break;
                     case "--full-match": o.FullMatch = true; break;
                     case "--demo": o.Demo = true; break;
@@ -88,8 +102,14 @@ namespace OCT7.Game
                     case "--fast-forward": o.FastForwardTicks = int.Parse(Next(), CultureInfo.InvariantCulture); break;
                     case "--overview": o.Overview = true; break;
                     case "--focus-army": o.FocusArmy = true; break;
-                    case "--select-all": o.SelectAllOnStart = true; break;
+                    case "--select-all": o.Select = "all"; break;
+                    case "--select": o.Select = Next(); break;
                     case "--distance": o.CameraDistance = float.Parse(Next(), CultureInfo.InvariantCulture); break;
+                    case "--yaw": o.CameraYaw = float.Parse(Next(), CultureInfo.InvariantCulture); break;
+                    case "--look":
+                        var xz = Next().Split(',');
+                        o.LookAt = new Vector2(float.Parse(xz[0], CultureInfo.InvariantCulture), float.Parse(xz[1], CultureInfo.InvariantCulture));
+                        break;
                     case "--screenshot": o.ScreenshotPath = Next(); break;
                     case "--after-frames": o.ScreenshotAfterFrames = int.Parse(Next(), CultureInfo.InvariantCulture); break;
                     default: GD.PushWarning($"Unknown launch option '{args[i]}'"); break;
@@ -108,6 +128,7 @@ namespace OCT7.Game
             MatchSettings.Seed = Seed;
             MatchSettings.MapId = MapId;
             MatchSettings.Demo = Demo;
+            MatchSettings.Showcase = Showcase;
         }
     }
 }

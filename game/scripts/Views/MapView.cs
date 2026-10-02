@@ -21,6 +21,9 @@ namespace OCT7.Game.Views
         private static readonly Color Farmland = new Color(0.40f, 0.45f, 0.26f);
         private static readonly Color Track = new Color(0.55f, 0.46f, 0.34f);
 
+        private readonly List<(Node3D node, Vec2 pos)> _props = new List<(Node3D, Vec2)>();
+        private readonly List<(MultiMesh multi, List<Vec2> positions)> _scatter = new List<(MultiMesh, List<Vec2>)>();
+
         public ImageTexture GroundTexture { get; private set; }
 
         public void Build(MapDefinition map)
@@ -37,7 +40,54 @@ namespace OCT7.Game.Views
                 AddChild(node);
             }
 
-            ScatterProps(map);
+            if (map.Id == "showcase")
+            {
+                ShowcaseProps(map);
+            }
+            else
+            {
+                ScatterProps(map);
+            }
+
+            ScatterGrassAndPebbles(map);
+        }
+
+        /// <summary>Hides trees, bushes, grass and pebbles inside a rectangle (a structure was placed there).</summary>
+        public void ClearArea(Vec2 min, Vec2 max)
+        {
+            bool Inside(Vec2 p) => p.X >= min.X && p.X <= max.X && p.Y >= min.Y && p.Y <= max.Y;
+            foreach (var (node, pos) in _props)
+            {
+                if (Inside(pos))
+                {
+                    node.Visible = false;
+                }
+            }
+
+            foreach (var (multi, positions) in _scatter)
+            {
+                for (int i = 0; i < positions.Count; i++)
+                {
+                    if (Inside(positions[i]))
+                    {
+                        multi.SetInstanceTransform(i, new Transform3D(Basis.Identity.Scaled(Vector3.One * 0.0001f), new Vector3(positions[i].X, -1f, positions[i].Y)));
+                    }
+                }
+            }
+        }
+
+        /// <summary>Gallery mode: one of each vegetation prop in a row next to the obstacle samples.</summary>
+        private void ShowcaseProps(MapDefinition map)
+        {
+            var props = new Node3D { Name = "Props" };
+            AddChild(props);
+            var kinds = new[] { PlantKind.Olive, PlantKind.Cypress, PlantKind.Palm, PlantKind.Bush, PlantKind.DryShrub };
+            for (int i = 0; i < 10; i++)
+            {
+                var prop = NatureModels.Build(kinds[i % kinds.Length], i);
+                prop.Position = new Vector3(134f + (i % 5) * 9f, 0f, 6f + (i / 5) * 10f);
+                props.AddChild(prop);
+            }
         }
 
         private void BuildOuterGround(MapGrid grid)
@@ -101,10 +151,119 @@ namespace OCT7.Game.Views
             {
                 Name = "Ground",
                 Mesh = new PlaneMesh { Size = new Vector2(grid.WorldWidth, grid.WorldHeight) },
-                MaterialOverride = new StandardMaterial3D { AlbedoTexture = GroundTexture, Roughness = 1f },
+                MaterialOverride = GroundMaterial(GroundTexture, grid),
                 Position = new Vector3(grid.WorldWidth * 0.5f, 0f, grid.WorldHeight * 0.5f),
                 CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
             });
+        }
+
+        private const string GroundShader = @"
+shader_type spatial;
+render_mode diffuse_lambert, specular_disabled;
+uniform sampler2D ground : source_color, filter_linear_mipmap;
+uniform sampler2D detail : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform vec2 detail_repeats = vec2(75.0, 75.0);
+uniform float detail_strength = 0.4;
+void fragment() {
+    vec3 base = texture(ground, UV).rgb;
+    vec3 d1 = texture(detail, UV * detail_repeats).rgb;
+    vec3 d2 = texture(detail, UV * detail_repeats * 0.23 + vec2(0.37, 0.71)).rgb;
+    vec3 d = mix(vec3(1.0), d1 * d2 * 1.12, detail_strength);
+    ALBEDO = base * d;
+    ROUGHNESS = 1.0;
+}";
+
+        /// <summary>Ground map plus a tiling pebble / crack detail texture (about 4 m per repeat) for close-up texture.</summary>
+        private static ShaderMaterial GroundMaterial(Texture2D ground, MapGrid grid)
+        {
+            var material = new ShaderMaterial { Shader = new Shader { Code = GroundShader } };
+            material.SetShaderParameter("ground", ground);
+            material.SetShaderParameter("detail", Textures.Get(Tex.GroundDetail));
+            material.SetShaderParameter("detail_repeats", new Vector2(grid.WorldWidth / 4f, grid.WorldHeight / 4f));
+            return material;
+        }
+
+        /// <summary>
+        /// Grass tufts (thick on farmland and in grassy patches, none on tracks and rock) and pebbles (mostly on rock),
+        /// each as one MultiMesh so thousands of instances cost a single draw call.
+        /// </summary>
+        private void ScatterGrassAndPebbles(MapDefinition map)
+        {
+            var grid = map.Grid;
+            var tracks = BuildTrackSegments(map);
+            var grass = new List<(Transform3D, Color, Vec2)>();
+            var pebbles = new List<(Transform3D, Color, Vec2)>();
+            int tries = (int)(grid.WorldWidth * grid.WorldHeight / 7f);
+            for (int i = 0; i < tries; i++)
+            {
+                var pos = new Vec2(MeshKit.Hash01(i, 811) * grid.WorldWidth, MeshKit.Hash01(i, 812) * grid.WorldHeight);
+                var cell = grid.WorldToCell(pos);
+                if (!grid.IsWalkable(cell) || grid.GetCoverSource(cell.X, cell.Y) != CoverType.None)
+                {
+                    continue;
+                }
+
+                var ground = grid.GetGround(cell);
+                float px = pos.X / grid.CellSize * PixelsPerCell, py = pos.Y / grid.CellSize * PixelsPerCell;
+                float patches = ValueNoise(px / 46f, py / 46f, 7);
+                float onTrack = DistanceToTracks(pos, tracks);
+                float roll = MeshKit.Hash01(i, 813);
+                float yaw = MeshKit.Hash01(i, 814) * Mathf.Tau;
+                if (ground == GroundType.Rock || (onTrack < 2.2f && roll < 0.08f))
+                {
+                    if (roll < 0.18f)
+                    {
+                        float size = 0.12f + MeshKit.Hash01(i, 815) * 0.28f;
+                        var basis = new Basis(Vector3.Up, yaw).Scaled(new Vector3(size, size * 0.6f, size));
+                        pebbles.Add((new Transform3D(basis, new Vector3(pos.X, size * 0.2f, pos.Y)), MeshKit.Vary(new Color(0.4f, 0.37f, 0.32f), 0.08f, i), pos));
+                    }
+
+                    continue;
+                }
+
+                if (onTrack < 2.4f)
+                {
+                    continue;
+                }
+
+                float density = ground == GroundType.MudFarmland ? 0.85f : Mathf.SmoothStep(0.45f, 0.8f, patches) * 0.75f + 0.08f;
+                if (roll > density)
+                {
+                    continue;
+                }
+
+                float scale = 1.3f + MeshKit.Hash01(i, 816) * 1.1f;
+                var tint = ground == GroundType.MudFarmland
+                    ? new Color(0.42f, 0.5f, 0.24f).Lerp(new Color(0.6f, 0.56f, 0.3f), MeshKit.Hash01(i, 817) * 0.6f)
+                    : new Color(0.62f, 0.55f, 0.32f).Lerp(new Color(0.46f, 0.5f, 0.26f), MeshKit.Hash01(i, 817) * 0.6f);
+                grass.Add((new Transform3D(new Basis(Vector3.Up, yaw).Scaled(Vector3.One * scale), new Vector3(pos.X, 0f, pos.Y)), tint, pos));
+            }
+
+            var grassMaterial = new StandardMaterial3D { VertexColorUseAsAlbedo = true, CullMode = BaseMaterial3D.CullModeEnum.Disabled, Roughness = 1f };
+            AddScatter("Grass", NatureModels.GrassTuft(), grassMaterial, grass, false);
+            var pebbleMaterial = new StandardMaterial3D { VertexColorUseAsAlbedo = true, Roughness = 1f };
+            AddScatter("Pebbles", MeshKit.FacetedMesh(5, 0.4f, 5), pebbleMaterial, pebbles, true);
+        }
+
+        private void AddScatter(string name, Mesh mesh, Material material, List<(Transform3D t, Color c, Vec2 p)> items, bool shadows)
+        {
+            var multi = new MultiMesh { TransformFormat = MultiMesh.TransformFormatEnum.Transform3D, UseColors = true, Mesh = mesh, InstanceCount = items.Count };
+            var positions = new List<Vec2>(items.Count);
+            for (int i = 0; i < items.Count; i++)
+            {
+                multi.SetInstanceTransform(i, items[i].t);
+                multi.SetInstanceColor(i, items[i].c);
+                positions.Add(items[i].p);
+            }
+
+            AddChild(new MultiMeshInstance3D
+            {
+                Name = name,
+                Multimesh = multi,
+                MaterialOverride = material,
+                CastShadow = shadows ? GeometryInstance3D.ShadowCastingSetting.On : GeometryInstance3D.ShadowCastingSetting.Off,
+            });
+            _scatter.Add((multi, positions));
         }
 
         /// <summary>Smooth value noise in [0, 1]: bilinear interpolation of lattice hashes with smoothstep weights.</summary>
@@ -188,28 +347,44 @@ namespace OCT7.Game.Views
             var grid = map.Grid;
             var props = new Node3D { Name = "Props" };
             AddChild(props);
+            var tracks = BuildTrackSegments(map);
             int placed = 0;
-            for (int i = 0; i < 1400 && placed < 170; i++)
+            for (int i = 0; i < 3000 && placed < 260; i++)
             {
                 int x = (int)(MeshKit.Hash01(i, 101) * grid.Width);
                 int y = (int)(MeshKit.Hash01(i, 202) * grid.Height);
                 var cell = new GridPos(x, y);
                 var pos = grid.CellCenter(cell);
-                if (!ClearArea(grid, cell, 2) || NearPoint(map, pos, 16f))
+                if (!IsClear(grid, cell, 2) || NearPoint(map, pos, 16f) || DistanceToTracks(pos, tracks) < 3f)
                 {
                     continue;
                 }
 
-                bool farmland = grid.GetGround(cell) == GroundType.MudFarmland;
-                var prop = MeshKit.Hash01(i, 303) < (farmland ? 0.75f : 0.45f) ? ModelFactory.BuildTree(i) : ModelFactory.BuildBush(i);
-                prop.Position = new Vector3(pos.X + (MeshKit.Hash01(i, 404) - 0.5f) * 1.5f, 0f, pos.Y + (MeshKit.Hash01(i, 505) - 0.5f) * 1.5f);
+                var prop = NatureModels.Build(PlantFor(grid.GetGround(cell), MeshKit.Hash01(i, 303)), i);
+                var at = new Vec2(pos.X + (MeshKit.Hash01(i, 404) - 0.5f) * 1.5f, pos.Y + (MeshKit.Hash01(i, 505) - 0.5f) * 1.5f);
+                prop.Position = new Vector3(at.X, 0f, at.Y);
                 prop.Rotation = new Vector3(0f, MeshKit.Hash01(i, 606) * Mathf.Tau, 0f);
                 props.AddChild(prop);
+                _props.Add((prop, at));
                 placed++;
             }
         }
 
-        private static bool ClearArea(MapGrid grid, GridPos c, int r)
+        /// <summary>Olive groves on farmland, palms and shrubs around the town, dry scrub on rock.</summary>
+        private static PlantKind PlantFor(GroundType ground, float roll)
+        {
+            switch (ground)
+            {
+                case GroundType.MudFarmland:
+                    return roll < 0.65f ? PlantKind.Olive : roll < 0.78f ? PlantKind.Cypress : PlantKind.Bush;
+                case GroundType.Rock:
+                    return roll < 0.6f ? PlantKind.DryShrub : PlantKind.Bush;
+                default:
+                    return roll < 0.22f ? PlantKind.Olive : roll < 0.4f ? PlantKind.Palm : roll < 0.5f ? PlantKind.Cypress : roll < 0.75f ? PlantKind.Bush : PlantKind.DryShrub;
+            }
+        }
+
+        private static bool IsClear(MapGrid grid, GridPos c, int r)
         {
             for (int dy = -r; dy <= r; dy++)
             {
