@@ -2,7 +2,9 @@ name: CI
 
 on:
   push:
+    branches: ['**']
   pull_request:
+  workflow_dispatch:
 
 env:
   DOTNET_CLI_TELEMETRY_OPTOUT: 1
@@ -57,3 +59,120 @@ jobs:
 
       - name: Full-match smoke test (must end in a victory)
         run: timeout 300 "$GODOT" --headless --path game -- --smoke-test 30000 --full-match --p0 hezbollah --p1 idf --difficulty hard
+
+  package:
+    name: Package playable builds (Windows + Linux)
+    runs-on: ubuntu-latest
+    needs: godot
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: write
+    concurrency:
+      group: package-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Install Godot .NET
+        run: |
+          curl -fsSL --retry 4 -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64.zip"
+          unzip -q godot.zip -d "$HOME/godot"
+          echo "GODOT=$HOME/godot/Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64/Godot_v${GODOT_VERSION}-stable_mono_linux.x86_64" >> "$GITHUB_ENV"
+
+      - name: Cache export templates
+        id: templates
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable.mono
+          key: godot-export-templates-${{ env.GODOT_VERSION }}-mono-win64-linux64
+
+      - name: Download export templates (Windows + Linux x86_64 only)
+        if: steps.templates.outputs.cache-hit != 'true'
+        run: |
+          dir="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable.mono"
+          mkdir -p "$dir"
+          curl -fsSL --retry 4 -o templates.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_mono_export_templates.tpz"
+          unzip -o -j templates.tpz templates/version.txt \
+            templates/windows_release_x86_64.exe templates/windows_release_x86_64_console.exe \
+            templates/windows_debug_x86_64.exe templates/windows_debug_x86_64_console.exe \
+            templates/linux_release.x86_64 templates/linux_debug.x86_64 -d "$dir"
+          rm templates.tpz
+
+      - name: Write build stamp (shown in the main menu)
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          short="${GITHUB_SHA::7}"
+          date="$(date -u +%Y-%m-%d)"
+          message="$(printf '%s' "${COMMIT_MESSAGE:-manual build}" | head -n 1)"
+          jq -n --arg commit "$GITHUB_SHA" --arg short "$short" --arg date "$date" --arg branch "$GITHUB_REF_NAME" --arg message "$message" \
+            '{commit: $commit, short: $short, date: $date, branch: $branch, message: $message}' > game/build_info.json
+          cat game/build_info.json
+          {
+            echo "SHORT_SHA=$short"
+            echo "BUILD_DATE=$date"
+            echo "BUILD_BRANCH=$GITHUB_REF_NAME"
+            echo "BUILD_MESSAGE=$message"
+          } >> "$GITHUB_ENV"
+
+      - name: Build game assembly
+        run: dotnet build game/OCT7.Game.csproj
+
+      - name: Import project
+        run: timeout 300 "$GODOT" --headless --path game --import
+
+      - name: Export Windows and Linux builds
+        run: |
+          mkdir -p builds/windows builds/linux
+          timeout 900 "$GODOT" --headless --path game --export-release "Windows Desktop" ../builds/windows/OCT7.exe
+          timeout 900 "$GODOT" --headless --path game --export-release "Linux" ../builds/linux/OCT7.x86_64
+          ls -la builds/windows builds/linux
+          ls builds/windows/data_*/OCT7.Game.dll builds/linux/data_*/OCT7.Game.dll
+
+      - name: Smoke test the exported game (Linux build, same data and code as Windows)
+        run: |
+          cd builds/linux
+          timeout 120 ./OCT7.x86_64 --headless -- --smoke-test 600 | tee smoke.log
+          grep -q "result=PASS" smoke.log
+
+      - name: Package zips
+        run: .github/scripts/package.sh
+
+      - name: Upload Windows build
+        uses: actions/upload-artifact@v4
+        with:
+          name: OCT7-windows-${{ env.SHORT_SHA }}
+          path: OCT7-windows.zip
+          retention-days: 30
+          compression-level: 0
+
+      - name: Upload Linux build
+        uses: actions/upload-artifact@v4
+        with:
+          name: OCT7-linux-${{ env.SHORT_SHA }}
+          path: OCT7-linux.zip
+          retention-days: 30
+          compression-level: 0
+
+      - name: Publish rolling "dev-latest" release (default branch only)
+        if: github.ref_name == github.event.repository.default_branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          notes="Latest development build, updated automatically after every push that passes CI.
+
+          Build ${SHORT_SHA} (${BUILD_DATE}), branch ${BUILD_BRANCH}: ${BUILD_MESSAGE}
+
+          Windows: download OCT7-windows.zip, extract it, run OCT7.exe (SmartScreen: More info, then Run anyway). See README.txt inside."
+          git tag -f dev-latest "$GITHUB_SHA"
+          git push -f origin refs/tags/dev-latest
+          if gh release view dev-latest > /dev/null 2>&1; then
+            gh release edit dev-latest --title "Latest dev build (${SHORT_SHA})" --notes "$notes" --latest
+          else
+            gh release create dev-latest --title "Latest dev build (${SHORT_SHA})" --notes "$notes" --latest
+          fi
+          gh release upload dev-latest OCT7-windows.zip OCT7-linux.zip --clobber

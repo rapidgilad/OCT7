@@ -89,6 +89,8 @@ The original team-scale plan (about 15 people, about 24 months, $2–3.5M) remai
 - **Presentation:** procedural low-poly soldiers, vehicles, structures and props; procedural animation; pooled VFX (tracers, rockets, explosions, smoke); fog of war; territory borders.
 - **UI:** HUD with resources, tickets, minimap, selection panel and command card; main menu, pause and end screens.
 
+**Playable builds:** every push that passes CI publishes `OCT7-windows.zip` to the rolling `dev-latest` GitHub release; see the README's "Download and play" section.
+
 **Next:**
 1. **Play it on your machine** and run the M1 fun test: do cover and suppression decide fights? Note what feels wrong.
 2. **Balance pass with MatchRunner.** Hamas is currently strong, and Hard must beat Easy in more than 70% of matches.

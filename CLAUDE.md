@@ -29,6 +29,17 @@ godot --headless --path game -- --smoke-test 30000 --full-match   # full AI-vs-A
 xvfb-run -a -s "-screen 0 1280x720x24" godot --path game --rendering-method forward_plus --audio-driver Dummy \
   --resolution 1280x720 -- --demo --fast-forward 7200 --focus-army --distance 40 --screenshot /abs/path/shot.png --after-frames 6
 ```
+Playable builds (CI `package` job in `.github/workflows/ci.yml`):
+- Every push that passes CI exports Windows and Linux (`game/export_presets.cfg`), then smoke-tests the exported Linux binary.
+- `.github/scripts/package.sh` zips both, adding launcher `.bat` files and a README to the Windows zip.
+- Pushes to the default branch update the rolling `dev-latest` release (`OCT7-windows.zip`).
+- CI writes `game/build_info.json` (gitignored) and the main menu shows it.
+- Godot's C# exporter needs `game/OCT7.Game.sln` (named after the assembly; it holds only the game and sim projects). Keep it.
+- To export locally:
+  1. Install the 4.5.1 mono export templates in `~/.local/share/godot/export_templates/4.5.1.stable.mono/`.
+  2. Run `godot --headless --path game --export-release "Linux" ../builds/linux/OCT7.x86_64`.
+  3. Run `builds/linux/OCT7.x86_64 --headless -- --smoke-test 600`.
+
 Scenes: `scenes/menu.tscn` (`UI/MainMenu.cs`, the main scene) → `scenes/match.tscn` (`Match/MatchController.cs`, which hosts the sim and AI and builds the world and UI in code).
 
 Launch options after `--` (any match option skips the menu; the menu reads them once):

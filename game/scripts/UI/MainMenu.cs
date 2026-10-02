@@ -63,7 +63,7 @@ namespace OCT7.Game.UI
             title.HorizontalAlignment = HorizontalAlignment.Center;
             var subtitle = UiTheme.Label("FRONTLINES", 26, UiTheme.Text);
             subtitle.HorizontalAlignment = HorizontalAlignment.Center;
-            var version = UiTheme.Label("v0.1 · Skirmish vs AI · Border Ridge Outpost", 13, UiTheme.Dim);
+            var version = UiTheme.Label($"v0.1 · Skirmish vs AI · Border Ridge Outpost · {BuildStamp()}", 13, UiTheme.Dim);
             version.HorizontalAlignment = HorizontalAlignment.Center;
             box.AddChild(title);
             box.AddChild(subtitle);
@@ -125,6 +125,27 @@ namespace OCT7.Game.UI
                 };
                 row.AddChild(button);
             }
+        }
+
+        /// <summary>"build abc1234 · 2026-10-02" from res://build_info.json (written by CI before export), else "dev build".</summary>
+        private static string BuildStamp()
+        {
+            const string path = "res://build_info.json";
+            if (!FileAccess.FileExists(path))
+            {
+                return "dev build";
+            }
+
+            var info = Json.ParseString(FileAccess.GetFileAsString(path));
+            if (info.VariantType != Variant.Type.Dictionary)
+            {
+                return "dev build";
+            }
+
+            var dict = info.AsGodotDictionary();
+            string shortSha = dict.ContainsKey("short") ? dict["short"].AsString() : "?";
+            string date = dict.ContainsKey("date") ? dict["date"].AsString() : "";
+            return $"build {shortSha} {date}".Trim();
         }
 
         private static OptionButton Option(VBoxContainer box, string label, string[] items, int selected)

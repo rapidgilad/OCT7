@@ -40,6 +40,19 @@ Every faction has its own building and unit designs. These shots come from the a
 |---|---|---|
 | ![IDF structures and units](docs/images/gallery-idf.png) | ![Hamas structures and units](docs/images/gallery-hamas.png) | ![Hezbollah structures and units](docs/images/gallery-hezbollah.png) |
 
+## Download and play (Windows)
+Every push that passes CI publishes a ready-to-run build, so no Godot or .NET install is needed.
+1. Download **[OCT7-windows.zip](https://github.com/rapidgilad/OCT7/releases/latest/download/OCT7-windows.zip)** (log in to GitHub first; the repo is private). All builds are listed on the [releases page](https://github.com/rapidgilad/OCT7/releases/tag/dev-latest).
+2. Extract it anywhere, e.g. `C:\Games\OCT7`, and run `OCT7.exe`. The build isn't code-signed, so if SmartScreen warns, click **More info → Run anyway**.
+3. The main menu shows the build number (commit) under the title.
+4. Extra launchers in the folder:
+   - `AI battle.bat`: watch the AI fight itself.
+   - `Gallery.bat`: every unit and building.
+   - `Effects test.bat`: explosions, fire, tracers and rockets on a loop.
+   - `Play (safe graphics).bat`: for older or integrated GPUs.
+
+Every CI run also stores the Windows and Linux zips as workflow artifacts for 30 days.
+
 ## Getting started
 
 ### Play a skirmish locally

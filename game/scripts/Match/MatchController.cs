@@ -382,7 +382,7 @@ namespace OCT7.Game.Match
             {
                 // Look at the first band from the front: units (facing +Y) toward the camera, structures behind them.
                 float d = _options.CameraDistance > 0f ? _options.CameraDistance : 85f;
-                CameraRig.SetView(new Vector3(center.X, 0f, 54f), d, 0f);
+                CameraRig.SetView(new Vector3(58f, 0f, 54f), d, 0f);
                 return;
             }
 
