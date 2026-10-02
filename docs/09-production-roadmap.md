@@ -85,13 +85,24 @@ The original team-scale plan (about 15 people, about 24 months, $2–3.5M) remai
   - Map control: vision with line of sight, sectors with supply connection and income, VP tickets, victory and surrender.
   - Building: production queues and engineer construction.
 - **AI:** one SkirmishAi with Easy, Normal and Hard presets. It follows build orders, sends cappers, attacks and defends, retreats and reinforces, and sees only what fog of war allows.
-- **Testing:** 93 xUnit tests. MatchRunner plays full matches for all 9 matchups and verifies determinism. The Godot host and MatchRunner produce identical state hashes.
+- **Testing:** 94 xUnit tests. MatchRunner plays full matches for all 9 matchups and verifies determinism. The Godot host and MatchRunner produce identical state hashes.
 - **Presentation:** procedural low-poly soldiers, vehicles, structures and props; procedural animation; pooled VFX (tracers, rockets, explosions, smoke); fog of war; territory borders.
 - **UI:** HUD with resources, tickets, minimap, selection panel and command card; main menu, pause and end screens.
 
 **Playable builds:** every push that passes CI publishes `OCT7-windows.zip` to the rolling `dev-latest` GitHub release; see the README's "Download and play" section.
 
-**Next:**
+**Next (updated 2026-10-02): the Unity port comes first.** Development moves to the owner's desktop, and the presentation moves to Unity. Plan: [plans/2026-10-02-08-unity-port.md](plans/2026-10-02-08-unity-port.md). Parity spec: [10-implementation-reference.md](10-implementation-reference.md).
+
+**Unity port milestones:**
+- **U0:** the sim runs inside Unity and reproduces the reference state hashes (a gate).
+- **U1:** playable greybox match.
+- **U2:** v0.1 parity.
+- **U3:** Unity art, effects and audio upgrades.
+- **U4:** Unity builds in CI; Godot retired.
+
+The Godot build keeps publishing playable builds until U2/U4.
+
+The items below follow the port. Engine-free work in `sim/` (balance, tests, new mechanics) can run in parallel, because Unity reuses the sim unchanged.
 1. **Play it on your machine** and run the M1 fun test: do cover and suppression decide fights? Note what feels wrong.
 2. **Balance pass with MatchRunner.** Hamas is currently strong, and Hard must beat Easy in more than 70% of matches.
 3. **Signature systems (M2/M3 scope):** tunnels, Iron Dome, Trophy, Intel; then veterancy, heroes and doctrines; then the deferred units (K9, D9R, Observer, Quadcopter, Mutabar, Katyusha).

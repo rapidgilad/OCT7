@@ -1,5 +1,17 @@
 # 08 — Engine & Technology (Solo Developer + Claude Code)
 
+> **Decision update (2026-10-02): the presentation layer moves to Unity.**
+> - **What:** the owner is moving development to their desktop and porting the presentation to **Unity**.
+> - **Why:** Unity's editor, Asset Store art and tooling now matter more than building everything in the cloud.
+> - **What stays shared:**
+>   - The simulation (`sim/`) stays engine-free and is used by Unity unchanged. This is the hedge described in §1 below, now being used.
+>   - `game/data/*.json` remains the single source of truth for all numbers.
+> - **Godot stays until parity:** the Godot build (`game/`) keeps shipping playable builds until the Unity version reaches parity.
+> - **Plan:** [plans/2026-10-02-08-unity-port.md](plans/2026-10-02-08-unity-port.md).
+> - **Parity spec:** [10-implementation-reference.md](10-implementation-reference.md).
+>
+> The rest of this document describes the Godot setup as built for v0.1. It stays accurate for the Godot build until the port's milestone U4 retires it.
+
 ## 1. Recommendation: Godot 4 (.NET / C#) + a pure C# simulation core
 
 ### Why the recommendation changed from Unity

@@ -84,12 +84,32 @@ Launch options after `--` (any match option skips the menu; the menu reads them 
 6. **Godot scripts:** `partial` classes deriving from Godot nodes; file name = class name. Scenes stay minimal; build nodes in code where practical. Commit `*.uid` and `*.import` files; never commit `.godot/`.
 7. **Content rules** (`docs/01-vision-and-scope.md`): no civilian NPCs or civilian-harm mechanics, fictional heroes, faction names and emblems via localization keys.
 
+## Plans and handoff
+- **Reading order for a new session:**
+  1. This file.
+  2. [`docs/10-implementation-reference.md`](docs/10-implementation-reference.md): the game as built, with every mechanic, number and UI behavior.
+  3. The newest plan in [`docs/plans/`](docs/plans/README.md) that isn't Done.
+  4. The design docs (`docs/01`–`09`) for intent and future scope.
+- **Plans:**
+  - Every approved plan is committed to `docs/plans/YYYY-MM-DD-NN-name.md`, with a status header, **before** implementation.
+  - Plan-mode files outside the repo are temporary and get lost.
+- **Mechanic changes:** any change to a mechanic updates docs/10 in the same commit.
+- **Engine direction (2026-10-02):** the presentation is moving to **Unity** on the owner's desktop ([`docs/plans/2026-10-02-08-unity-port.md`](docs/plans/2026-10-02-08-unity-port.md)).
+  - `sim/` and `game/data/` are shared and must stay engine-free.
+  - Unity must reproduce the reference state hashes (docs/10 §1.4) before any gameplay UI is built.
+  - `game/` (Godot) stays buildable and keeps CI green until the port's milestone U4.
+- **Where to work:**
+  - **Desktop:** primary, and the place for Unity work.
+  - **Cloud sessions:** engine-free work only (`sim/`, tests, data, MatchRunner), and only when asked.
+  - Pull before starting; push when done.
+
 ## Where things are going next (docs/09 §8)
 v0.1, the first playable skirmish, is done. Next:
-1. Playtest feedback and a balance pass with MatchRunner.
-2. Signature systems: tunnels, Iron Dome, Trophy, Intel.
-3. Veterancy, heroes and doctrines.
-4. The deferred units.
+1. **The Unity port**, milestones U0–U4 (see the plan).
+2. Playtest feedback and a balance pass with MatchRunner. Engine-free, so it can run in parallel.
+3. Signature systems: tunnels, Iron Dome, Trophy, Intel.
+4. Veterancy, heroes and doctrines.
+5. The deferred units.
 
 Each step: sim + tests first, then visuals, then a screenshot check.
 

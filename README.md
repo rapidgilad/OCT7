@@ -25,9 +25,14 @@ A squad-based tactical RTS in the Company of Heroes tradition, set in modern Mid
   - The map has olive trees, cypresses, palms and grass.
   - The HUD is compact, with icon command cards.
 - **Sound:** basic positional battle sounds synthesized in code: rifles, machine guns, snipers, cannons, rocket launches and explosions. There's a sound test and a volume slider in the main menu; see [Test the sounds](#test-the-sounds).
-- **Under the hood:** a deterministic C# simulation, 93 unit tests, and an AI-vs-AI MatchRunner that verifies determinism across all 9 matchups. CI runs a full headless match in the real game.
+- **Under the hood:** a deterministic C# simulation, 94 unit tests, and an AI-vs-AI MatchRunner that verifies determinism across all 9 matchups. CI runs a full headless match in the real game.
 
-Next: playtesting, a balance pass, then the signature systems (tunnels, Iron Dome, Trophy, Intel), veterancy, heroes and doctrines. See [docs/09](docs/09-production-roadmap.md).
+**Next: the presentation moves to Unity.**
+- The game rules (`sim/`) and data (`game/data/`) carry over unchanged.
+- The Godot build stays playable until Unity reaches parity.
+- **Start here:** [docs/10 — the game as built](docs/10-implementation-reference.md) and [the Unity port plan](docs/plans/2026-10-02-08-unity-port.md). Every plan is in [docs/plans](docs/plans/README.md).
+
+After the port: playtesting, a balance pass, then the signature systems (tunnels, Iron Dome, Trophy, Intel), veterancy, heroes and doctrines. See [docs/09](docs/09-production-roadmap.md).
 
 | | |
 |---|---|
@@ -127,7 +132,9 @@ In Claude Code cloud sessions, `.claude/hooks/session-start.sh` installs .NET 8,
 - **Later:** cinematics, campaign, multiplayer, full rosters, second doctrine and hero per faction.
 
 ## Engine
-**Godot 4.5.1 (.NET / C#)**, with all game rules in a **pure C# simulation library** that runs and tests headless.
+**Moving to Unity (2026-10-02).** The presentation layer is being ported to Unity on the owner's desktop ([plan](docs/plans/2026-10-02-08-unity-port.md)). The simulation and data are shared unchanged.
+
+**Today's playable build: Godot 4.5.1 (.NET / C#)**, with all game rules in a **pure C# simulation library** that runs and tests headless.
 - Claude Code can build, test, run and screenshot everything in the cloud.
 - The engine is free, with an MIT license.
 - The rules stay portable to Unity if a team joins later.
@@ -149,5 +156,7 @@ Details: [docs/08-engine-and-technology.md](docs/08-engine-and-technology.md).
 | 07 | [UI / UX](docs/07-ui-ux.md) | HUD, controls, overlays, localization (RTL), onboarding |
 | 08 | [Engine & Technology](docs/08-engine-and-technology.md) | Godot vs Unity for solo, architecture, cloud workflow, tools, assets, licensing |
 | 09 | [Production Roadmap](docs/09-production-roadmap.md) | Solo milestones, budget, weekly rhythm, risks, status and next steps |
+| 10 | [Implementation Reference](docs/10-implementation-reference.md) | **The game as built (v0.1):** every mechanic, formula, roster, AI rule and UI behavior; the parity spec for the Unity port |
+| — | [Plans](docs/plans/README.md) | Every approved plan, with status, including the [Unity port](docs/plans/2026-10-02-08-unity-port.md) |
 
 All numbers in the docs and `game/data/` are **initial tuning values**.
